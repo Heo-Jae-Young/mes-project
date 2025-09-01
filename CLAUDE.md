@@ -621,6 +621,8 @@ MySQLdb.DataError: (1406, "Data too long for column 'employee_id' at row 1")
 
 ## 현재 프로젝트 상태 (2025-09-01) 🚀
 
+### 🎉 최신 업데이트: Service Layer 구현 완료!
+
 ### 완료된 작업 ✅
 
 1. **Django 백엔드 기본 구조** (완료)
@@ -653,39 +655,51 @@ MySQLdb.DataError: (1406, "Data too long for column 'employee_id' at row 1")
    - pytest + MariaDB 환경 (운영과 동일)
    - 단위/통합 테스트 분리 구조
    - 모델별 헬퍼 함수 + pytest fixture
-   - **18개 JWT/User 단위 테스트 모두 통과**
+   - **25개 서비스 레이어 단위 테스트 모두 통과**
+
+6. **Service Layer 구현** (완료 ✅)
+   - HACCP 컴플라이언스 검증 및 리포팅
+   - 생산 주문 관리 및 효율성 계산
+   - 공급업체 성과 평가 및 리스크 관리
+   - 완전한 추적성(traceability) 관리
 
 ### 현재 브랜치 상태
 
 - **main**: 안정된 HACCP 모델 + API 구조
-- **feature/jwt-token-endpoints**: JWT 토큰 엔드포인트 구현 완료 (머지 대기)
+- **feature/service-layer**: 서비스 레이어 + 25개 단위 테스트 완료 (현재)
 
 ### 다음 우선순위 작업
 
-### 1단계: JWT 기능 완성 및 PR 정리 (즉시)
+### 1단계: Service Layer PR 생성 및 정리 (즉시)
 
 ```bash
 git add .
-git commit -m "fix: MariaDB 제약조건 준수 - employee_id 길이 제한 해결"
-gh pr create --title "feat: JWT 토큰 엔드포인트 + 테스트 아키텍처" --body "JWT 인증 시스템 구현 및 체계적인 테스트 구조 구축"
+git commit -m "feat: Service Layer 구현 완료 - HACCP/Production/Supplier 서비스 + 25개 단위 테스트"
+gh pr create --title "feat: Service Layer 구현 및 포괄적 테스트" --body "비즈니스 로직 분리를 위한 서비스 레이어 구현"
 ```
 
-### 2단계: Service Layer 구현 (다음 세션)
+**PR 내용:**
+- HaccpService: 컴플라이언스 점수 계산, 중요 알림 관리
+- ProductionService: 생산 효율성, 원자재 추적성 관리
+- SupplierService: 성과 평가, 리스크 평가 시스템
+- 25개 단위 테스트 + 완전한 테스트 헬퍼 시스템
+
+### 2단계: Service Layer 구현 ✅ (완료)
 
 ```bash
 git checkout -b feature/service-layer
 ```
 
-**구현할 내용:**
+**완료된 내용:**
 
-- `core/services/` 디렉토리 생성
-- HaccpService: HACCP 7원칙 준수 검증 로직
-- UserService: 사용자 관리 및 권한 체크
-- SupplierService: 공급업체 승인 및 등급 관리
-- ProductionService: 생산 주문 및 추적성 관리
-- ViewSet에서 비즈니스 로직 분리
+- ✅ `core/services/` 디렉토리 생성
+- ✅ **HaccpService**: HACCP 7원칙 준수 검증, 컴플라이언스 점수 계산, 중요 알림 관리
+- ✅ **UserService**: 사용자 관리 및 권한 체크 (기존 완료)
+- ✅ **SupplierService**: 공급업체 검증, 성과 평가, 리스크 평가
+- ✅ **ProductionService**: 생산 주문 관리, 원자재 할당, 효율성 계산
+- ✅ **25개 단위 테스트 모두 통과** (권한, 검증, 비즈니스 로직)
 
-### 3단계: 권한 시스템 고도화 (우선순위 3)
+### 3단계: 권한 시스템 고도화 (다음 우선순위)
 
 ```bash
 git checkout -b feature/advanced-permissions
@@ -747,71 +761,93 @@ python manage.py migrate
 
 **다음 세션 첫 작업:**
 
-1. 현재 브랜치 확인 및 PR 생성
-2. Service Layer 구현부터 시작
-3. 테스트 아키텍처 활용한 서비스 단위테스트 추가
+1. Service Layer PR 생성 및 리뷰
+2. 권한 시스템 고도화 시작
+3. API 문서화 (Swagger) 구현
 
 **알아두면 좋은 정보:**
 
 - MariaDB 테스트 권한 설정 완료
 - pytest 환경 완전히 구축
-- JWT 인증 시스템 완성
-- 18개 단위 테스트 모두 통과
+- Service Layer 구현 완료
+- 25개 단위 테스트 모두 통과 (28.83% 커버리지)
 
-### 지난 세션 완료 단계 (참고용)
+## Service Layer 구현 세부사항
 
-```bash
-git checkout -b feature/advanced-permissions
+### 📋 구현된 서비스 클래스
+
+#### 1. HaccpService (`haccp_service.py`)
+```python
+class HaccpService:
+    - validate_ccp_log_creation(): CCP 로그 생성 전 검증
+    - calculate_compliance_score(): HACCP 컴플라이언스 점수 계산
+    - get_critical_alerts(): 중요 알림 목록 조회
+    - generate_compliance_report(): 컴플라이언스 보고서 생성
+
+class HaccpQueryService:
+    - get_ccp_logs_for_user(): 사용자별 CCP 로그 조회
+    - get_ccps_for_user(): 접근 가능한 CCP 목록
 ```
 
-**구현할 내용:**
+#### 2. ProductionService (`production_service.py`)
+```python
+class ProductionService:
+    - validate_production_order_creation(): 생산 주문 생성 검증
+    - start_production(): 생산 시작 처리 (원자재 할당)
+    - complete_production(): 생산 완료 처리
+    - get_production_efficiency(): 효율성 지표 계산
 
-- `core/permissions/` 폴더 생성
-- 역할별 권한 클래스 (AdminPermission, QualityManagerPermission 등)
-- 객체별 권한 (자신이 생성한 데이터만 수정 가능 등)
-- HACCP 로그 불변성 강화
+class ProductionQueryService:
+    - get_production_orders_for_user(): 역할별 생산 주문 조회
+    - get_production_dashboard_data(): 대시보드 데이터
 
-### 5단계: API 문서화 및 테스트 (우선순위 4)
-
-```bash
-pip install drf-spectacular
+class MaterialTraceabilityService:
+    - get_material_traceability(): 원자재 추적성 조회
+    - get_forward_traceability(): 전방 추적성
 ```
 
-**구현할 내용:**
+#### 3. SupplierService (`supplier_service.py`)
+```python
+class SupplierService:
+    - validate_supplier_creation(): 공급업체 등록 검증
+    - evaluate_supplier_performance(): 성과 평가
+    - get_supplier_risk_assessment(): 리스크 평가
 
-- Swagger UI 자동 생성
-- API 스키마 문서화
-- 유닛 테스트 작성
+class SupplierQueryService:
+    - get_suppliers_for_user(): 역할별 공급업체 조회
+    - get_supplier_statistics(): 통계 정보
 
-**환경 설정 및 테스트 명령어:**
-
-```bash
-# 개발 환경 시작
-docker-compose up -d db
-cd backend
-source venv/bin/activate
-python manage.py runserver
-
-# 테스트 데이터 초기화
-python manage.py seed_data --clear
-
-# 주요 접속 URL
-- Admin: http://localhost:8000/admin/ (admin/admin123)
-- API Root: http://localhost:8000/api/
-- 브라우저 API 테스트: 권한 해제 후 테스트 가능
+class SupplierAuditService:
+    - schedule_supplier_audit(): 감사 일정 등록
+    - get_audit_checklist(): 감사 체크리스트
 ```
 
-**알려진 이슈 및 해결책:**
+### 🧪 테스트 현황 (25개 모두 통과)
 
-- django-filter 패키지 이미 추가됨 (requirements.txt)
-- AnonymousUser 권한 처리 로직 이미 구현됨
-- JWT 인증 설정 완료, 토큰 엔드포인트만 추가하면 됨
+#### UserService Tests (8개)
+- ✅ 비밀번호 변경 (관리자/본인)
+- ✅ 권한 검증 및 에러 처리
+- ✅ 사용자 쿼리셋 필터링
 
-**다음 세션 첫 작업:**
+#### HaccpService Tests (6개)
+- ✅ CCP 로그 검증 (권한, 시간, 상태)
+- ✅ 컴플라이언스 점수 계산
 
-1. PR #3 상태 확인
-2. JWT 토큰 엔드포인트 추가부터 시작
-3. Postman으로 실제 로그인/API 호출 테스트
+#### ProductionService Tests (5개)
+- ✅ 생산 주문 검증
+- ✅ 효율성 계산
+
+#### SupplierService Tests (6개)
+- ✅ 공급업체 검증 (중복, HACCP 인증)
+- ✅ 리스크 평가
+
+### 💡 핵심 설계 특징
+
+1. **HACCP 특화**: 식품안전 규정에 특화된 비즈니스 로직
+2. **역할 기반 접근 제어**: admin, quality_manager, operator 역할별 권한
+3. **데이터 무결성**: 트랜잭션 처리 및 검증 로직
+4. **추적성 보장**: 완전한 forward/backward traceability
+5. **성과 지표**: 효율성, 컴플라이언스 점수 자동 계산
 
 ### 개발 노하우 메모
 
