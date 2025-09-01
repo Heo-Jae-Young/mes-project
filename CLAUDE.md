@@ -9,26 +9,31 @@ HACCP 기반 식품 안전 규정 준수 MES (Manufacturing Execution System) Sa
 ## Technology Stack
 
 **Backend:**
+
 - Django 5.2.5 + Django REST Framework 3.16
 - JWT Authentication (djangorestframework-simplejwt)
 - MariaDB (Docker container)
 - Python 3.12.7
 
 **Frontend:** (Planned)
-- React 18+ 
+
+- React 18+
 - Axios for API communication
 
 **Infrastructure:**
+
 - Docker Compose for development
 - Nginx for production (planned)
 
 ## Development Setup
 
 ### Prerequisites
+
 - Docker and Docker Compose
 - Python 3.12.7 (managed via asdf)
 
 ### Quick Start
+
 ```bash
 # 1. Start MariaDB
 docker-compose up -d db
@@ -49,16 +54,39 @@ python manage.py runserver
 ```
 
 ### Common Commands
-- **Database migration:** `python manage.py migrate`
-- **Create migrations:** `python manage.py makemigrations`
-- **Create superuser:** `python manage.py createsuperuser`
-- **Run server:** `python manage.py runserver`
-- **Check configuration:** `python manage.py check`
+
+- **데이터베이스 마이그레이션:** `python manage.py migrate`
+- **마이그레이션 파일 생성:** `python manage.py makemigrations`
+- **관리자 계정 생성:** `python manage.py createsuperuser`
+- **개발 서버 실행:** `python manage.py runserver`
+- **설정 검증:** `python manage.py check`
+- **시드 데이터 로드:** `python manage.py seed_data --clear` (admin/admin123 계정 자동 생성)
+
+### 데이터베이스 관리
+
+- **전체 데이터베이스 초기화 (완전 리셋):**
+  ```bash
+  # 1. 서버 중지 및 DB 볼륨 삭제
+  docker-compose down -v
+  docker-compose up -d db
+  
+  # 2. 마이그레이션 실행
+  python manage.py migrate
+  
+  # 3. 시드 데이터 로드 (관리자 계정 포함)
+  python manage.py seed_data --clear
+  ```
+- **모든 데이터 삭제 (스키마 유지):** `python manage.py flush`
+- **특정 앱 마이그레이션 초기화:** `python manage.py migrate <앱이름> zero`
+- **마이그레이션 상태 확인:** `python manage.py showmigrations`
+- **데이터베이스 직접 접속:** `docker exec -it mes-mariadb mysql -u mes_user -p`
 
 ## Architecture Notes
 
 ### HACCP-Based Design
+
 핵심 설계 원칙은 HACCP 7원칙을 디지털화하는 것:
+
 1. 위해요소 분석 (Hazard Analysis)
 2. 중요 관리점 결정 (Critical Control Points)
 3. 한계 기준 설정 (Critical Limits)
@@ -68,6 +96,7 @@ python manage.py runserver
 7. 문서화 및 기록 유지 (Documentation)
 
 ### Database Models (Planned)
+
 - **User:** Role-based access control
 - **Supplier:** Supplier management
 - **RawMaterial:** Raw material catalog
@@ -80,6 +109,7 @@ python manage.py runserver
 ## Environment Variables
 
 Required `.env` file in backend directory:
+
 ```bash
 SECRET_KEY="your-django-secret-key"
 DEBUG=True
@@ -100,7 +130,8 @@ DATABASE_PORT=3306
 
 ## Development Log
 
-### 2024-09-01: Django Backend 초기 설정 완료
+### 2025-09-01: Django Backend 초기 설정 완료
+
 - Django 5.2.5 + DRF 프로젝트 생성
 - MariaDB Docker 연동 (localhost → 127.0.0.1 소켓 이슈 해결)
 - JWT 인증, CORS 설정 완료
@@ -108,14 +139,26 @@ DATABASE_PORT=3306
 - **다음 작업**: core/models.py에 HACCP 8개 모델 구현
 - **브랜치**: feature/django-backend-setup (PR 대기)
 
+### 2025-09-01: HACCP 모델 구현 완료
+
+- models/ 패키지 구조로 8개 모델 파일 분리 구현
+- User, Supplier, RawMaterial, MaterialLot, FinishedProduct, ProductionOrder, CCP, CCPLog
+- Django Admin 인터페이스 완비 (CCPLog는 불변 데이터로 수정/삭제 불가)
+- 시드 데이터 management command 구현 (admin 계정 자동 생성 포함)
+- **현재 상태**: 모든 HACCP 모델 구현 완료, 원클릭 테스트 환경 구축
+- **브랜치**: feature/haccp-models (작업 중)
+
 ### 개발 노하우 메모
+
 - **자연스러운 커밋/PR 작성법**:
+
   - 삽질했던 부분 언급 (localhost 소켓 문제 등)
   - 과도한 이모지나 템플릿 형식 피하기
   - 개인적 경험과 해결 과정 포함
   - "완료", "예정" 같은 간단한 표현 사용
 
 - **DB 연결 이슈 해결**:
+
   - Django mysqlclient에서 localhost는 Unix 소켓 시도
   - Docker 환경에서는 127.0.0.1 사용 (TCP 포트)
   - mysqlclient 컴파일 위해 libmysqlclient-dev 설치 필요
@@ -128,6 +171,7 @@ DATABASE_PORT=3306
 ## Code Architecture & Design Patterns
 
 ### Backend (Django) 패턴
+
 - **Repository Pattern**: 복잡한 쿼리 로직은 별도 repository 클래스로 분리
 - **Service Layer**: 비즈니스 로직을 service.py에서 처리, view는 얇게 유지
 - **Serializer 분리**: CRUD 별로 다른 serializer 사용 (CreateSerializer, UpdateSerializer)
@@ -135,6 +179,7 @@ DATABASE_PORT=3306
 - **Permission 클래스**: 역할별 권한은 커스텀 permission 클래스로 구현
 
 ### Frontend (React) 패턴 (예정)
+
 - **Custom Hooks**: API 호출, 상태 관리 로직을 훅으로 추상화
 - **Compound Component**: 복잡한 UI 컴포넌트는 여러 하위 컴포넌트로 구성
 - **Container/Presenter**: 로직과 UI 분리
@@ -142,6 +187,7 @@ DATABASE_PORT=3306
 - **Error Boundary**: 컴포넌트별 에러 처리
 
 ### 폴더 구조
+
 ```
 backend/core/
 ├── models.py          # Django 모델
@@ -165,6 +211,7 @@ frontend/src/
 ```
 
 ### HACCP 특화 패턴
+
 - **Immutable Log Pattern**: CCP 로그는 수정 불가, 새 레코드로만 이력 관리
 - **Audit Trail**: 모든 중요 데이터 변경 시 자동 감사 로그 생성
 - **Chain of Responsibility**: HACCP 검증 단계를 체인 패턴으로 구현
