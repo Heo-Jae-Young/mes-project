@@ -4,12 +4,14 @@ from core.models.user import User
 
 def create_test_user(role='operator', **kwargs):
     """테스트용 사용자 생성"""
+    import random
+    random_num = random.randint(1000, 9999)
     defaults = {
-        'username': f'test_{role}',
+        'username': f'test_{role}_{random_num}',
         'password': 'testpass123',
-        'email': f'{role}@test.com',
+        'email': f'{role}_{random_num}@test.com',
         'role': role,
-        'employee_id': f'TEST_{role.upper()}',
+        'employee_id': f'TEST_{role.upper()}_{random_num}',
         'department': f'{role} 부서',
         'phone': '010-1234-5678'
     }
@@ -19,9 +21,11 @@ def create_test_user(role='operator', **kwargs):
 
 def create_admin_user(**kwargs):
     """관리자 사용자 생성"""
+    import random
+    random_num = random.randint(1000, 9999)
     defaults = {
-        'username': 'test_admin',
-        'employee_id': 'ADMIN001',
+        'username': f'test_admin_{random_num}',
+        'employee_id': f'ADMIN{random_num}',
         'department': '관리팀'
     }
     defaults.update(kwargs)
@@ -30,9 +34,11 @@ def create_admin_user(**kwargs):
 
 def create_quality_manager(**kwargs):
     """품질관리자 사용자 생성"""
+    import random
+    random_num = random.randint(1000, 9999)
     defaults = {
-        'username': 'test_quality',
-        'employee_id': 'QM001', 
+        'username': f'test_quality_{random_num}',
+        'employee_id': f'QM{random_num}',
         'department': '품질관리팀'
     }
     defaults.update(kwargs)
@@ -41,9 +47,11 @@ def create_quality_manager(**kwargs):
 
 def create_operator(**kwargs):
     """작업자 사용자 생성"""
+    import random
+    random_num = random.randint(1000, 9999)
     defaults = {
-        'username': 'test_operator',
-        'employee_id': 'OP001',
+        'username': f'test_operator_{random_num}',
+        'employee_id': f'OP{random_num}',
         'department': '생산팀'
     }
     defaults.update(kwargs)
