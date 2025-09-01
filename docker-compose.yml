@@ -1,0 +1,17 @@
+  services:
+    db:
+      image: mariadb:latest
+      container_name: mes-mariadb
+      environment:
+        MYSQL_ROOT_PASSWORD: root123
+        MYSQL_DATABASE: mes_db
+        MYSQL_USER: mes_user
+        MYSQL_PASSWORD: mes_password
+      ports:
+        - "3306:3306"
+      volumes:
+        - mes_db_data:/var/lib/mysql
+      restart: unless-stopped
+
+  volumes:
+    mes_db_data:
