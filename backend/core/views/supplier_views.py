@@ -6,6 +6,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count, Q
 from core.models import Supplier, MaterialLot
 from core.serializers import SupplierSerializer, SupplierCreateSerializer, SupplierUpdateSerializer
+from core.services.supplier_service import SupplierService, SupplierQueryService, SupplierAuditService
 
 
 class SupplierViewSet(viewsets.ModelViewSet):
@@ -18,6 +19,12 @@ class SupplierViewSet(viewsets.ModelViewSet):
     search_fields = ['name', 'code', 'contact_person', 'email']
     ordering_fields = ['name', 'code', 'created_at']
     ordering = ['-created_at']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.supplier_service = SupplierService()
+        self.supplier_query_service = SupplierQueryService()
+        self.supplier_audit_service = SupplierAuditService()
     
     def get_serializer_class(self):
         """액션에 따라 다른 Serializer 사용"""

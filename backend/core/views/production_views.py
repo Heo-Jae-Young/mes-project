@@ -8,6 +8,7 @@ from django.utils import timezone
 from datetime import timedelta
 from core.models import ProductionOrder
 from core.serializers import ProductionOrderSerializer, ProductionOrderCreateSerializer, ProductionOrderUpdateSerializer
+from core.services.production_service import ProductionService, ProductionQueryService, MaterialTraceabilityService
 
 
 class ProductionOrderViewSet(viewsets.ModelViewSet):
@@ -21,6 +22,12 @@ class ProductionOrderViewSet(viewsets.ModelViewSet):
     ordering_fields = ['planned_start_date', 'priority', 'created_at']
     ordering = ['-created_at']
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.production_service = ProductionService()
+        self.production_query_service = ProductionQueryService()
+        self.traceability_service = MaterialTraceabilityService()
+    
     def get_serializer_class(self):
         if self.action == 'create':
             return ProductionOrderCreateSerializer
@@ -30,16 +37,8 @@ class ProductionOrderViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         """역할별 생산오더 조회 권한"""
-        user = self.request.user
-        queryset = ProductionOrder.objects.select_related(
-            'finished_product', 'assigned_operator', 'created_by'
-        )
-        
-        # 작업자는 자신에게 할당된 오더만 조회
-        if user.role == 'operator':
-            queryset = queryset.filter(
-                Q(assigned_operator=user) | Q(assigned_operator__isnull=True)
-            )
+        # Service를 통해 사용자별 권한 필터링된 queryset 가져오기
+        queryset = self.production_query_service.get_production_orders_for_user(self.request.user)
         
         # 날짜 범위 필터
         start_date = self.request.query_params.get('start_date')
@@ -57,57 +56,44 @@ class ProductionOrderViewSet(viewsets.ModelViewSet):
         """생산 시작"""
         order = self.get_object()
         
-        if order.status != 'planned':
+        try:
+            # Service를 통한 생산 시작 처리
+            updated_order = self.production_service.start_production(order, request.user)
+            serializer = ProductionOrderSerializer(updated_order)
+            return Response({
+                'detail': '생산이 시작되었습니다.',
+                'order': serializer.data
+            })
+        except Exception as e:
             return Response(
-                {'detail': '계획 상태의 오더만 시작할 수 있습니다.'}, 
+                {'detail': str(e)}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
-        order.status = 'in_progress'
-        order.actual_start_date = timezone.now()
-        
-        # 작업자가 지정되지 않은 경우 현재 사용자로 설정
-        if not order.assigned_operator:
-            order.assigned_operator = request.user
-            
-        order.save()
-        
-        serializer = ProductionOrderSerializer(order)
-        return Response({
-            'detail': '생산이 시작되었습니다.',
-            'order': serializer.data
-        })
     
     @action(detail=True, methods=['post'])
     def complete_production(self, request, pk=None):
         """생산 완료"""
         order = self.get_object()
-        
-        if order.status != 'in_progress':
-            return Response(
-                {'detail': '진행 중인 오더만 완료할 수 있습니다.'}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
         produced_quantity = request.data.get('produced_quantity')
         completion_notes = request.data.get('notes', '')
         
-        if produced_quantity is not None:
-            order.produced_quantity = produced_quantity
-        
-        order.status = 'completed'
-        order.actual_end_date = timezone.now()
-        
-        if completion_notes:
-            order.notes = f"{order.notes}\n완료 시 메모: {completion_notes}".strip()
-        
-        order.save()
-        
-        serializer = ProductionOrderSerializer(order)
-        return Response({
-            'detail': '생산이 완료되었습니다.',
-            'order': serializer.data
-        })
+        try:
+            # Service를 통한 생산 완료 처리
+            updated_order = self.production_service.complete_production(
+                order=order,
+                produced_quantity=produced_quantity,
+                completion_notes=completion_notes
+            )
+            serializer = ProductionOrderSerializer(updated_order)
+            return Response({
+                'detail': '생산이 완료되었습니다.',
+                'order': serializer.data
+            })
+        except Exception as e:
+            return Response(
+                {'detail': str(e)}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
     
     @action(detail=True, methods=['post'])
     def pause_production(self, request, pk=None):

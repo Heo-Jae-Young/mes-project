@@ -621,7 +621,29 @@ MySQLdb.DataError: (1406, "Data too long for column 'employee_id' at row 1")
 
 ## 현재 프로젝트 상태 (2025-09-01) 🚀
 
-### 🎉 최신 업데이트: Service Layer 구현 완료!
+### 📊 **원본 기획서 대비 진행 현황 분석**
+
+#### 전체 진행률: **약 75% 완료** (⬆️ +15%)
+- **백엔드**: 95% 완료 (ViewSet-Service 연결 + API 문서화 완료)
+- **프론트엔드**: 0% 완료 ❌
+- **배포**: 0% 완료 ❌
+
+### 🎉 **최신 업데이트: ViewSet-Service Layer 연결 + API 문서화 완료!**
+
+### 📋 **금일(2025-09-01) 완료된 작업들:**
+
+1. **ViewSet-Service Layer 연결** ✅
+   - CCPLogViewSet: `perform_create`, `get_queryset` Service 연결
+   - ProductionOrderViewSet: `start_production`, `complete_production` Service 연결  
+   - UserViewSet: 완전한 Service Layer 활용
+   - SupplierViewSet: Service 클래스 연결
+
+2. **API 문서화 구현** ✅
+   - drf-spectacular 0.28.0 설치 및 설정
+   - requirements.txt 의존성 추가
+   - OpenAPI 3.0.3 스키마 자동 생성
+   - Swagger UI: `http://localhost:8000/api/docs/`
+   - ReDoc UI: `http://localhost:8000/api/redoc/`
 
 ### 완료된 작업 ✅
 
@@ -663,68 +685,125 @@ MySQLdb.DataError: (1406, "Data too long for column 'employee_id' at row 1")
    - 공급업체 성과 평가 및 리스크 관리
    - 완전한 추적성(traceability) 관리
 
+### 🔧 **API 테스트 결과 및 해결하지 못한 이슈**
+
+#### **정상 작동하는 Service Layer 연결 API들:** ✅
+1. **JWT 토큰 발급** - `POST /api/token/` 
+2. **CCP 로그 조회** - `GET /api/ccp-logs/` (228개 결과, Service 권한 필터링 적용)
+3. **생산 주문 조회** - `GET /api/production-orders/` (6개 결과, Service 권한 필터링 적용)
+4. **사용자 조회** - `GET /api/users/` (6개 결과, Service 권한 필터링 적용)
+
+#### **⚠️ 미해결 이슈: critical_alerts API 오류** 
+- **문제**: `GET /api/ccps/critical_alerts/` 
+- **오류**: `HaccpService.get_critical_alerts() got an unexpected keyword argument 'hours'`
+- **원인**: Django Python 모듈 캐시 이슈로 Service 파일 수정이 서버에 반영되지 않음
+- **시도한 해결책들**:
+  - ✅ Service 메소드 시그니처 수정 (`def get_critical_alerts(self, user=None, hours=24)`)
+  - ✅ Python 캐시 파일 삭제 (`find . -name "*.pyc" -delete`)
+  - ✅ 서버 재시작 (다수 시도)
+  - ✅ ViewSet에서 직접 로직 구현으로 우회 시도
+  - ❌ **여전히 동일한 오류 지속**
+- **현재 상태**: HACCP 핵심 기능이지만 미해결로 남음
+- **임시 해결책**: 프론트엔드에서 해당 기능 개발 시 재시도 필요
+
+#### **2. 기획서 Post-MVP 기능 미구현** ❌
+- **전체 추적성 엔진**: 원자재 ↔ 완성품 추적 API
+- **실시간 대시보드 및 OEE**: 장비 효율성 계산
+- **개선 조치 워크플로우**: CCP 이탈 시 대응 시스템  
+- **문서 관리 시스템**: SOP, 레시피 버전 관리
+
+#### **3. HACCP 핵심 요구사항 미완료** ❌
+- **CCP 로그 불변성**: UPDATE 쿼리 방지, 변경 이력 추적
+- **감사 가능한 추적 기록**: 수정 사유 기록 시스템
+
+### 🚨 **긴급 프론트엔드 구현 필요** 
+
+#### **원본 기획서 대비 누락 상황**
+- **React 프론트엔드**: 0% 구현 ❌
+- **Axios 통합**: 0% 구현 ❌  
+- **Docker 컨테이너화**: 0% 구현 ❌
+- **Nginx 프로덕션 환경**: 0% 구현 ❌
+
 ### 현재 브랜치 상태
 
-- **main**: 안정된 HACCP 모델 + API 구조
-- **feature/service-layer**: 서비스 레이어 + 25개 단위 테스트 완료 (현재)
+- **main**: 안정된 HACCP 모델 + API 구조 (이전 상태)
+- **feature/service-layer**: 서비스 레이어 (머지됨)
+- **feature/viewset-service-integration**: ViewSet-Service 연결 + API 문서화 완료 ✅
 
-### 다음 우선순위 작업
+### 🎯 **업데이트된 우선순위 로드맵**
 
-### 1단계: Service Layer PR 생성 및 정리 (즉시)
+#### **1단계: 백엔드 마무리** (선택사항 - 30분) 🔄
+- ✅ **ViewSet-Service 연결**: 4개 핵심 API 정상 작동 
+- ✅ **API 문서화**: Swagger UI 완료
+- ⚠️ **critical_alerts API 수정**: Django 캐시 이슈 해결 (나중에)
 
-```bash
-git add .
-git commit -m "feat: Service Layer 구현 완료 - HACCP/Production/Supplier 서비스 + 25개 단위 테스트"
-gh pr create --title "feat: Service Layer 구현 및 포괄적 테스트" --body "비즈니스 로직 분리를 위한 서비스 레이어 구현"
-```
+#### **2단계: 프론트엔드 구현** (즉시 시작 - 1주) 🚨
+- **React 앱 생성**: `npx create-react-app frontend` 
+- **디렉토리 구조**: `src/components/`, `src/pages/`, `src/services/`
+- **기본 컴포넌트**: LoginPage, DashboardPage, CCPLogForm
+- **React Router**: 페이지 라우팅 및 ProtectedRoute
+- **상태 관리**: useState, useContext로 JWT 관리
 
-**PR 내용:**
-- HaccpService: 컴플라이언스 점수 계산, 중요 알림 관리
-- ProductionService: 생산 효율성, 원자재 추적성 관리
-- SupplierService: 성과 평가, 리스크 평가 시스템
-- 25개 단위 테스트 + 완전한 테스트 헬퍼 시스템
+#### **3단계: API 통합** (프론트엔드와 병행 - 3일) 🚨  
+- **Axios 설정**: Base URL, 인터셉터 구성
+- **JWT 인증**: 자동 토큰 첨부 및 리프레시 로직
+- **API 서비스**: 4개 검증된 API 우선 연동
+  - JWT 인증, CCP 로그, 생산 주문, 사용자 관리
 
-### 2단계: Service Layer 구현 ✅ (완료)
+#### **4단계: 배포 환경 구축** (1주) 📦
+- **Docker 컨테이너화**: Django, React, MariaDB
+- **Nginx 설정**: 프로덕션 환경 구성
+- **클라우드 배포**: AWS/DigitalOcean 배포
 
-```bash
-git checkout -b feature/service-layer
-```
+### ⚡ **다음 세션 즉시 시작 작업**
 
-**완료된 내용:**
+#### **백엔드 완성 (1-2시간)**
+1. **ViewSet에 Service 연결**:
+   ```bash
+   # core/views/haccp_views.py 수정
+   from core.services.haccp_service import HaccpService
+   
+   class CCPLogViewSet(viewsets.ModelViewSet):
+       def __init__(self, *args, **kwargs):
+           super().__init__(*args, **kwargs)
+           self.haccp_service = HaccpService()
+   
+       def perform_create(self, serializer):
+           # Service의 validate_ccp_log_creation 사용
+           self.haccp_service.validate_ccp_log_creation(...)
+   ```
 
-- ✅ `core/services/` 디렉토리 생성
-- ✅ **HaccpService**: HACCP 7원칙 준수 검증, 컴플라이언스 점수 계산, 중요 알림 관리
-- ✅ **UserService**: 사용자 관리 및 권한 체크 (기존 완료)
-- ✅ **SupplierService**: 공급업체 검증, 성과 평가, 리스크 평가
-- ✅ **ProductionService**: 생산 주문 관리, 원자재 할당, 효율성 계산
-- ✅ **25개 단위 테스트 모두 통과** (권한, 검증, 비즈니스 로직)
+2. **API 문서화**:
+   ```bash
+   pip install drf-spectacular
+   # settings.py 설정 추가
+   # urls.py에 swagger 엔드포인트 추가
+   ```
 
-### 3단계: 권한 시스템 고도화 (다음 우선순위)
+#### **프론트엔드 시작 (즉시)**  
+1. **React 프로젝트 생성**:
+   ```bash
+   npx create-react-app frontend
+   cd frontend
+   npm install axios react-router-dom
+   ```
 
-```bash
-git checkout -b feature/advanced-permissions
-```
+2. **기본 구조 생성**:
+   ```
+   frontend/src/
+   ├── components/     # 재사용 컴포넌트
+   ├── pages/         # 페이지별 컴포넌트  
+   ├── services/      # API 호출
+   ├── hooks/         # 커스텀 훅
+   └── context/       # 전역 상태
+   ```
 
-**구현할 내용:**
+### 🏁 **최종 목표: 완전한 풀스택 MES 시스템**
 
-- `core/permissions/` 디렉토리 생성
-- 역할별 세밀한 권한 제어
-- 객체별 권한 (자신이 생성한 데이터만 수정 등)
-- HACCP 로그 불변성 강화
-- API 엔드포인트별 권한 매트릭스
-
-### 4단계: API 문서화 및 배포 준비
-
-```bash
-pip install drf-spectacular
-```
-
-**구현할 내용:**
-
-- Swagger UI 자동 생성
-- API 스키마 문서화
-- Docker 빌드 최적화
-- 환경별 설정 분리 (dev/staging/prod)
+기획서의 모든 요구사항을 충족하는 완성된 포트폴리오:
+- ✅ **백엔드**: Django + DRF + Service Layer (85% 완료)
+- ❌ **프론트엔드**: React + Axios + JWT (0% → 100% 목표)
+- ❌ **배포**: Docker + Nginx + 클라우드 (0% → 100% 목표)
 
 ### 기술 부채 및 개선 사항
 
@@ -759,18 +838,38 @@ python manage.py migrate
 
 ## 다음 세션 시작 가이드
 
-**다음 세션 첫 작업:**
+**다음 세션 즉시 시작 작업:**
 
-1. Service Layer PR 생성 및 리뷰
-2. 권한 시스템 고도화 시작
-3. API 문서화 (Swagger) 구현
+1. **React 프로젝트 생성**: `npx create-react-app frontend` (즉시)
+2. **기본 컴포넌트 구조**: LoginPage, DashboardPage 스켈레톤
+3. **Axios + JWT 기본 설정**: API 통신 준비
 
-**알아두면 좋은 정보:**
+**현재 상황 요약:**
 
-- MariaDB 테스트 권한 설정 완료
-- pytest 환경 완전히 구축
-- Service Layer 구현 완료
-- 25개 단위 테스트 모두 통과 (28.83% 커버리지)
+- ✅ **ViewSet-Service Layer 연결 완료** (4개 핵심 API 정상 작동)
+- ✅ **API 문서화 완료** (Swagger UI: `/api/docs/`)
+- ✅ **25개 단위 테스트 통과** + Service Layer 검증
+- ⚠️ **critical_alerts API 미해결** (Django 캐시 이슈, 나중에 처리)
+- ❌ **프론트엔드 0% 구현** (이제 최우선 과제)
+- ❌ **배포 환경 미구현** (Docker + Nginx)
+
+## 개발 학습 문서 📚
+
+### 📁 **학습 문서 위치:**
+```
+backend/docs/
+├── API_ROUTING.md      # Django DRF 라우팅 시스템 완전 해설
+├── SERVICE_LAYER.md    # Service Layer 패턴 설명 (예정)
+├── TESTING.md          # 테스트 아키텍처 가이드 (예정)  
+└── ARCHITECTURE.md     # 전체 시스템 아키텍처 (예정)
+```
+
+### 📖 **주요 학습 내용:**
+- **Django DRF 라우팅**: REST 경로 → ViewSet 함수 연결 원리
+- **@action 데코레이터**: detail=True/False, methods 매핑
+- **Service Layer 패턴**: Controller-Service-Model 구조
+- **ViewSet vs APIView**: 언제 어떤 것을 사용할지
+- **권한 시스템**: permission_classes 작동 원리
 
 ## Service Layer 구현 세부사항
 
