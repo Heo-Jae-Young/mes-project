@@ -85,7 +85,7 @@ class HaccpService:
             'verification_rate': round(verification_rate, 2)
         }
 
-    def get_critical_alerts(self, user):
+    def get_critical_alerts(self, user=None, hours=24):
         """
         중요 알림 목록 조회
         - 기준 이탈 미조치 항목
@@ -97,11 +97,11 @@ class HaccpService:
         
         alerts = []
         
-        # 1. 기준 이탈 미조치 항목 (24시간 내)
+        # 1. 기준 이탈 미조치 항목
         unresolved_deviations = CCPLog.objects.filter(
             is_within_limits=False,
             corrective_action_taken__isnull=True,
-            measured_at__gte=timezone.now() - timedelta(hours=24)
+            measured_at__gte=timezone.now() - timedelta(hours=hours)
         ).select_related('ccp', 'production_order')
         
         for log in unresolved_deviations:
@@ -156,7 +156,12 @@ class HaccpService:
                     'consecutive_count': data['count']
                 })
         
-        return sorted(alerts, key=lambda x: {'critical': 0, 'high': 1, 'medium': 2}[x['severity']])
+        result = {
+            'alert_period': f'최근 {hours}시간',
+            'critical_alerts': sorted(alerts, key=lambda x: {'critical': 0, 'high': 1, 'medium': 2}[x['severity']]),
+            'total_alerts': len(alerts)
+        }
+        return result
 
     def generate_compliance_report(self, date_from, date_to, user):
         """

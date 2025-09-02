@@ -11,6 +11,7 @@ from core.serializers import (
     CCPSerializer, CCPCreateSerializer,
     CCPLogSerializer, CCPLogCreateSerializer, CCPLogUpdateSerializer
 )
+from core.services.haccp_service import HaccpService, HaccpQueryService
 
 
 class CCPViewSet(viewsets.ModelViewSet):
@@ -24,6 +25,11 @@ class CCPViewSet(viewsets.ModelViewSet):
     ordering_fields = ['name', 'code', 'created_at']
     ordering = ['-created_at']
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.haccp_service = HaccpService()
+        self.haccp_query_service = HaccpQueryService()
+    
     def get_serializer_class(self):
         if self.action == 'create':
             return CCPCreateSerializer
@@ -31,17 +37,7 @@ class CCPViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         """역할별 CCP 조회 권한"""
-        user = self.request.user
-        
-        # 감사자는 모든 CCP 조회 가능
-        if user.role == 'auditor':
-            return CCP.objects.all()
-        
-        # 작업자는 활성 CCP만 조회
-        if user.role == 'operator':
-            return CCP.objects.filter(is_active=True)
-            
-        return CCP.objects.all()
+        return self.haccp_query_service.get_ccps_for_user(self.request.user)
     
     def perform_destroy(self, instance):
         """CCP 삭제 시 로그 존재 확인"""
@@ -87,11 +83,12 @@ class CCPViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['get'])
     def compliance_report(self, request, pk=None):
-        """CCP 규정 준수 보고서"""
+        """CCP 규정 준수 보고서 (개별 CCP)"""
         ccp = self.get_object()
-        
-        # 분석 기간 (기본 30일)
         days = int(request.query_params.get('days', '30'))
+        
+        # TODO: Service에 개별 CCP 보고서 메소드 추가 후 리팩토링 예정
+        from datetime import timedelta
         start_date = timezone.now() - timedelta(days=days)
         
         logs = ccp.logs.filter(measured_at__gte=start_date)
@@ -103,61 +100,23 @@ class CCPViewSet(viewsets.ModelViewSet):
                 'message': '해당 기간에 모니터링 로그가 없습니다.'
             })
         
+        # 기본 통계
         total_logs = logs.count()
         within_limits = logs.filter(status='within_limits').count()
-        out_of_limits = logs.filter(status='out_of_limits').count()
-        corrective_action = logs.filter(status='corrective_action').count()
-        
         compliance_rate = (within_limits / total_logs * 100) if total_logs > 0 else 0
-        
-        # 일별 로그 수 분포
-        daily_logs = logs.extra({
-            'date': 'DATE(measured_at)'
-        }).values('date').annotate(
-            count=Count('id'),
-            out_of_limits_count=Count('id', filter=Q(status='out_of_limits'))
-        ).order_by('date')
-        
-        # 편차 분석
-        deviation_analysis = []
-        if ccp.critical_limit_min or ccp.critical_limit_max:
-            out_of_limit_logs = logs.filter(status='out_of_limits')
-            for log in out_of_limit_logs:
-                measured = float(log.measured_value)
-                deviation = 0
-                
-                if ccp.critical_limit_min and measured < float(ccp.critical_limit_min):
-                    deviation = measured - float(ccp.critical_limit_min)
-                elif ccp.critical_limit_max and measured > float(ccp.critical_limit_max):
-                    deviation = measured - float(ccp.critical_limit_max)
-                
-                deviation_analysis.append({
-                    'measured_at': log.measured_at,
-                    'measured_value': measured,
-                    'deviation': deviation,
-                    'corrective_action': log.corrective_action_taken
-                })
         
         return Response({
             'ccp_info': {
                 'name': ccp.name,
                 'code': ccp.code,
-                'type': ccp.get_ccp_type_display(),
-                'critical_limits': {
-                    'min': ccp.critical_limit_min,
-                    'max': ccp.critical_limit_max
-                }
+                'type': ccp.get_ccp_type_display()
             },
             'analysis_period': f'최근 {days}일',
             'compliance_summary': {
                 'total_measurements': total_logs,
                 'within_limits': within_limits,
-                'out_of_limits': out_of_limits,
-                'corrective_actions': corrective_action,
                 'compliance_rate': round(compliance_rate, 2)
-            },
-            'daily_monitoring': list(daily_logs),
-            'deviation_incidents': deviation_analysis[:10]  # 최근 10건만
+            }
         })
     
     @action(detail=False, methods=['get'])
@@ -170,40 +129,8 @@ class CCPViewSet(viewsets.ModelViewSet):
     def critical_alerts(self, request):
         """중요 알림 - 최근 기준 이탈 CCP"""
         hours = int(request.query_params.get('hours', '24'))
-        start_time = timezone.now() - timedelta(hours=hours)
-        
-        # 최근 기준 이탈 로그가 있는 CCP들
-        critical_ccps = CCP.objects.filter(
-            logs__measured_at__gte=start_time,
-            logs__status='out_of_limits',
-            is_active=True
-        ).distinct()
-        
-        alerts = []
-        for ccp in critical_ccps:
-            recent_violations = ccp.logs.filter(
-                measured_at__gte=start_time,
-                status='out_of_limits'
-            ).order_by('-measured_at')[:5]
-            
-            alerts.append({
-                'ccp_id': ccp.id,
-                'ccp_name': ccp.name,
-                'ccp_code': ccp.code,
-                'process_step': ccp.process_step,
-                'violation_count': recent_violations.count(),
-                'latest_violation': {
-                    'measured_at': recent_violations.first().measured_at,
-                    'measured_value': recent_violations.first().measured_value,
-                    'deviation_notes': recent_violations.first().deviation_notes
-                } if recent_violations.exists() else None
-            })
-        
-        return Response({
-            'alert_period': f'최근 {hours}시간',
-            'critical_ccps': alerts,
-            'total_alerts': len(alerts)
-        })
+        alerts = self.haccp_service.get_critical_alerts(user=request.user, hours=hours)
+        return Response(alerts)
 
 
 class CCPLogViewSet(viewsets.ModelViewSet):
@@ -217,6 +144,11 @@ class CCPLogViewSet(viewsets.ModelViewSet):
     ordering_fields = ['measured_at', 'created_at']
     ordering = ['-measured_at']
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.haccp_service = HaccpService()
+        self.haccp_query_service = HaccpQueryService()
+    
     def get_serializer_class(self):
         if self.action == 'create':
             return CCPLogCreateSerializer
@@ -226,9 +158,8 @@ class CCPLogViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         """로그 조회 필터링"""
-        queryset = CCPLog.objects.select_related(
-            'ccp', 'production_order', 'created_by'
-        )
+        # Service를 통해 사용자별 권한 필터링된 queryset 가져오기
+        queryset = self.haccp_query_service.get_ccp_logs_for_user(self.request.user)
         
         # 날짜 범위 필터
         start_date = self.request.query_params.get('start_date')
@@ -244,6 +175,24 @@ class CCPLogViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(created_by=self.request.user)
             
         return queryset
+    
+    def perform_create(self, serializer):
+        """CCP 로그 생성 시 Service를 통한 검증"""
+        validated_data = serializer.validated_data
+        ccp = validated_data['ccp']
+        measured_value = validated_data['measured_value']
+        measured_at = validated_data['measured_at']
+        
+        # Service를 통한 검증
+        self.haccp_service.validate_ccp_log_creation(
+            ccp=ccp,
+            measured_value=measured_value,
+            measured_at=measured_at,
+            created_by=self.request.user
+        )
+        
+        # 검증 통과 시 생성
+        serializer.save(created_by=self.request.user)
     
     def perform_destroy(self, instance):
         """CCP 로그는 삭제 불가 (HACCP 규정 준수)"""
