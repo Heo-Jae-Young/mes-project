@@ -28,15 +28,36 @@ echo "-- 서버 재시작 시작 --"
 
 # 백엔드 서버 시작
 echo "백엔드 서버 시작 중..."
-cd backend && python manage.py runserver &
-echo "백엔드 서버 시작 명령 완료."
-sleep 5 # 서버 시작 대기
+cd ../backend && source venv/bin/activate && python manage.py runserver &
+BACKEND_PID=$!
+echo "백엔드 서버 시작 완료 (PID: $BACKEND_PID)"
+sleep 3 # 서버 시작 대기
 
 # 프론트엔드 서버 시작
 echo "프론트엔드 서버 시작 중..."
-cd frontend && npm start &
-echo "프론트엔드 서버 시작 명령 완료."
-sleep 5 # 서버 시작 대기
+cd ../frontend && npm start &
+FRONTEND_PID=$!
+echo "프론트엔드 서버 시작 완료 (PID: $FRONTEND_PID)"
+sleep 3 # 서버 시작 대기
 
+echo "-- 서버 상태 확인 --"
+sleep 2
+
+# 백엔드 서버 상태 확인
+if curl -s http://localhost:8000/admin/login/ > /dev/null 2>&1; then
+    echo "✅ 백엔드 서버 (http://localhost:8000) 정상 작동"
+else
+    echo "❌ 백엔드 서버 응답 없음"
+fi
+
+# 프론트엔드 서버 상태 확인
+if curl -s http://localhost:3000 > /dev/null 2>&1; then
+    echo "✅ 프론트엔드 서버 (http://localhost:3000) 정상 작동"
+else
+    echo "❌ 프론트엔드 서버 응답 없음"
+fi
+
+echo ""
 echo "-- 서버 재시작 스크립트 완료 --"
-echo "브라우저에서 http://localhost:3000 에 접속하여 확인해주세요."
+echo "🌐 브라우저에서 http://localhost:3000 에 접속하여 확인해주세요."
+echo "📚 API 문서: http://localhost:8000/api/docs/"
