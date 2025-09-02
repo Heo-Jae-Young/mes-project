@@ -62,6 +62,34 @@ HACCP 기반 MES 시스템 개발을 위한 기술 스택 선택 과정과 근�
 - **Fat Models**: Django 전통 방식이지만 복잡한 도메인에서는 Model이 비대해짐
 - **Fat Views**: 비즈니스 로직이 ViewSet에 집중되어 테스트 어려움
 
+### django-cors-headers
+- **역할**: 브라우저의 동일 출처 정책(Same-Origin Policy)으로 인해 발생하는 교차 출처(Cross-Origin) HTTP 요청 문제를 해결합니다. React 프론트엔드(예: `localhost:3000`)가 백엔드 API(`localhost:8000`)를 안전하게 호출하기 위해 필수적입니다.
+- **대안**: Django 미들웨어를 직접 작성하여 CORS 헤더를 추가하는 방법.
+- **선택 이유**: 직접 구현 시 발생할 수 있는 보안 허점을 방지하고, Django 커뮤니티에서 검증된 표준적인 방법을 사용하기 위함입니다. 설정이 간단하고 직관적입니다.
+
+### django-filter
+- **역할**: API URL의 쿼리 파라미터(예: `/api/ccp-logs/?status=CRITICAL`)를 기반으로 데이터 목록을 동적으로 필터링하는 기능을 쉽게 구현할 수 있게 해줍니다.
+- **대안**: ViewSet에서 `get_queryset` 메소드를 오버라이드하여 수동으로 필터링 로직을 작성하는 방법.
+- **선택 이유**: 수동 구현에 비해 코드 양이 훨씬 적고 가독성이 높습니다. 복잡한 필터 조건을 선언적으로 정의할 수 있어 유지보수가 용이합니다.
+
+### python-decouple
+- **역할**: `.env` 파일이나 환경 변수에서 설정 값(비밀 키, 데이터베이스 암호 등)을 안전하게 로드합니다. 소스 코드와 민감한 설정 정보를 분리하는 역할을 합니다.
+- **대안**: `os.environ`을 직접 사용, `python-dotenv` 라이브러리.
+- **선택 이유**: `python-decouple`은 설정 값이 없을 경우 기본값을 지정하거나, 필요한 타입으로 캐스팅하는(예: `config('DEBUG', default=False, cast=bool)`) 등 `os.environ`보다 더 편리하고 강력한 기능을 제공합니다.
+
+### Gunicorn
+- **역할**: 프로덕션 환경에서 Django 애플리케이션을 실행하기 위한 WSGI(Web Server Gateway Interface) HTTP 서버입니다. Django에 내장된 개발 서버(`runserver`)는 프로덕션용이 아닙니다.
+- **대안**: `uWSGI`, `mod_wsgi` (Apache).
+- **선택 이유**: `Gunicorn`은 설정이 간단하고, Python 커뮤니티에서 널리 사용되며, 대부분의 클라우드 플랫폼 및 Nginx와의 연동이 매우 쉽습니다.
+
+### Pytest (pytest-django, pytest-cov)
+- **역할**: 코드의 정확성을 검증하기 위한 테스트 프레임워크입니다.
+  - **Pytest**: 간결한 문법과 강력한 Fixture 기능을 제공하는 사실상의 Python 표준 테스트 프레임워크입니다.
+  - **pytest-django**: Django 환경을 Pytest에서 쉽게 테스트할 수 있도록 도와줍니다. (테스트 DB 생성, 클라이언트 제공 등)
+  - **pytest-cov**: 테스트 코드 커버리지를 측정하여 테스트가 얼마나 충분한지 분석합니다.
+- **대안**: Python 내장 `unittest` 프레임워크.
+- **선택 이유**: `unittest`에 비해 `pytest`는 훨씬 적은 양의 코드로 동일한 테스트를 작성할 수 있으며, Fixture 시스템은 테스트의 재사용성과 가독성을 극적으로 향상시킵니다.
+
 ## 🎨 프론트엔드 기술 스택
 
 ### React 18
