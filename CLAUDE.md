@@ -133,6 +133,49 @@ DATABASE_PORT=3306
 - **API Design:** RESTful APIs with proper authentication
 - **Data Integrity:** Use database transactions for critical operations
 
+## 📊 종합 현황 및 다음 단계 (Overall Status & Next Steps)
+
+### 진행률 요약
+
+- **백엔드**: 95% (핵심 API 및 서비스 레이어 구현 완료)
+- **프론트엔드**: 15% (초기 설정 및 로그인 기능 구현 완료)
+- **배포**: 0%
+
+### 현재 상태
+
+- ✅ **백엔드 서버 정상 실행 중** (`http://localhost:8000`)
+- ✅ **프론트엔드 서버 정상 실행 중** (`http://localhost:3000`)
+- ✅ **핵심 기능 구현 완료**: 
+  - Django 모델링, DRF API, Service Layer, JWT 인증 시스템
+  - React 초기 구조, `axios` 및 `react-router-dom` 설정, 전역 상태관리(Context API)
+  - 프론트엔드 로그인 UI, 인증 로직 및 API 연동 완료
+- ⚠️ **미해결 이슈**: 백엔드 `critical_alerts` API의 Django 모듈 캐시 문제 (우선순위 낮음)
+
+### 🎯 다음 목표: 대시보드 페이지 기능 구현
+
+이제 실제 사용자가 로그인 후 처음 마주할 **대시보드 페이지**에 동적 데이터를 연동하고 핵심 정보를 시각화하는 작업을 진행합니다.
+
+**세부 작업 계획:**
+
+1.  **대시보드 데이터 API 연동**:
+    -   `DashboardPage.js` 내에서 백엔드 API를 호출하여 필요한 데이터를 가져옵니다.
+    -   **대상 API**:
+        -   `GET /api/ccp-logs/`: 최근 CCP(중요관리점) 로그 목록
+        -   `GET /api/production-orders/`: 현재 진행 중인 생산 오더 목록
+        -   `GET /api/statistics/`: 주요 통계 데이터 (HACCP 준수율 등)
+
+2.  **대시보드 UI 컴포넌트 구현**:
+    -   가져온 데이터를 표시할 재사용 가능한 UI 컴포넌트를 생성합니다.
+    -   **대상 컴포넌트**:
+        -   `SummaryCard.js`: 주요 지표(예: 총 생산량, HACCP 준수율)를 표시하는 카드
+        -   `RecentActivityTable.js`: 최근 CCP 로그나 생산 오더를 표시하는 테이블
+        -   `ComplianceChart.js`: 시간에 따른 HACCP 준수율 변화를 보여주는 차트 (라이브러리 `recharts` 등 사용)
+
+3.  **페이지 레이아웃 구성**:
+    -   `DashboardPage.js`에서 위 컴포넌트들을 조합하여 전체 페이지 레이아웃을 완성합니다.
+
+---
+
 ## Development Log
 
 ### 2025-09-01: Django Backend 초기 설정 완료
@@ -170,77 +213,23 @@ DATABASE_PORT=3306
 - **상태**: feature/api-implementation 브랜치, PR 생성 준비
 - **다음 작업**: JWT 토큰 엔드포인트 추가, 권한 시스템 고도화
 
-### 다음 세션 시작 가이드
+### 2025-09-02: 프론트엔드 초기 설정 완료 ✅
 
-**현재 완료된 것:**
+- **React 프로젝트 생성**: `create-react-app`을 사용하여 `frontend` 디렉토리 및 기본 파일 구조를 설정했습니다. (PR #7)
+- **초기 설정 파일 추가**: `tailwind.config.js`, `postcss.config.js` 등 프론트엔드 개발에 필요한 기본 구성 파일을 추가했습니다.
+- **상태**: `feature/react-frontend` 브랜치가 `main`에 병합되었습니다.
+- **다음 작업**: 프론트엔드 라이브러리(`axios`, `react-router-dom`) 설치 및 로그인 페이지, 대시보드 페이지 등 기본 컴포넌트 구현.
 
-- ✅ Django 백엔드 초기 설정 (Django 5.2.5 + DRF + MariaDB)
-- ✅ HACCP 모델 8개 구현 (패키지 구조로 분리)
-- ✅ Django Admin + 시드 데이터 (admin/admin123 계정)
-- ✅ DRF API 구현 (Serializers + ViewSets + URL 라우팅)
-- ✅ JWT 인증 기반 권한 시스템
-- ✅ PR #3 생성 완료 (https://github.com/Heo-Jae-Young/mes-project/pull/3)
+### 2025-09-02: 개발 서버 실행 및 API 연동 테스트 완료 ✅
 
-**다음 세션 우선 순위별 작업:**
+- **개발 서버 실행**: `frontend` 디렉토리에서 `npm start`를 백그라운드로 실행하여 React 개발 서버를 시작했습니다.
+- **포트 충돌 해결**: 기존에 3000번 포트를 사용하던 프로세스를 `kill` 명령으로 종료하여 서버 실행 환경을 확보했습니다.
+- **서버 응답 테스트**: `curl`을 사용하여 `http://localhost:3000`에 접속, React 앱의 HTML이 정상적으로 반환됨을 확인했습니다.
+- **API 연동 테스트**: `curl`을 사용하여 백엔드 로그인 API(`http://localhost:8000/api/token/`)를 호출, JWT 토큰이 성공적으로 발급됨을 확인하여 프론트-백엔드 간의 기본 연결을 검증했습니다.
+- **상태**: 프론트엔드와 백엔드 서버가 모두 실행 중이며, 기본적인 API 통신이 가능함이 확인되었습니다.
+- **다음 작업**: 브라우저에서 `http://localhost:3000`에 접속하여 실제 로그인 기능을 테스트하고, 그 결과에 따라 대시보드 페이지의 상세 데이터 연동을 시작합니다.
 
-### 1단계: PR 리뷰 및 머지
 
-```bash
-# PR #3 확인 및 머지 후
-git checkout main
-git pull origin main
-# 새 브랜치 생성을 위한 준비
-```
-
-### 2단계: JWT 토큰 엔드포인트 추가 ✅ (완료)
-
-**구현된 내용:**
-
-- `/api/token/` - 로그인 (토큰 발급)
-- `/api/token/refresh/` - 토큰 갱신
-- `/api/token/verify/` - 토큰 검증
-
-**테스트 방법:**
-
-1. **토큰 발급 (로그인)**
-
-   ```bash
-   curl -X POST http://localhost:8000/api/token/ \
-        -H "Content-Type: application/json" \
-        -d '{"username": "admin", "password": "admin123"}'
-   ```
-
-   응답: `{"refresh": "...", "access": "..."}`
-
-2. **인증된 API 호출**
-
-   ```bash
-   curl -X GET http://localhost:8000/api/users/ \
-        -H "Authorization: Bearer {access_token}"
-   ```
-
-3. **토큰 검증**
-
-   ```bash
-   curl -X POST http://localhost:8000/api/token/verify/ \
-        -H "Content-Type: application/json" \
-        -d '{"token": "{access_token}"}'
-   ```
-
-   응답: `{}` (유효한 토큰일 때)
-
-4. **토큰 갱신**
-   ```bash
-   curl -X POST http://localhost:8000/api/token/refresh/ \
-        -H "Content-Type: application/json" \
-        -d '{"refresh": "{refresh_token}"}'
-   ```
-
-**기본 테스트 계정:**
-
-- admin/admin123 (role: admin)
-- quality_manager/password (role: quality_manager)
-- operator1/password (role: operator)
 
 ## Testing Strategy Discussion
 
@@ -1010,7 +999,7 @@ class SupplierAuditService:
 ```
 backend/core/
 ├── models.py          # Django 모델
-├── serializers/       # API 직렬화
+├── serializers/
 │   ├── user_serializers.py
 │   └── haccp_serializers.py
 ├── services/          # 비즈니스 로직
@@ -1034,3 +1023,5 @@ frontend/src/
 - **Immutable Log Pattern**: CCP 로그는 수정 불가, 새 레코드로만 이력 관리
 - **Audit Trail**: 모든 중요 데이터 변경 시 자동 감사 로그 생성
 - **Chain of Responsibility**: HACCP 검증 단계를 체인 패턴으로 구현
+
+```

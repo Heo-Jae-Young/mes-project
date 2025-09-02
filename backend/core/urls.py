@@ -14,6 +14,7 @@ from core.views import (
     ProductionOrderViewSet,
     CCPViewSet,
     CCPLogViewSet,
+    StatisticsAPIView,
 )
 
 # DRF Router로 ViewSet URL 자동 생성
@@ -35,6 +36,9 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     
+    # Statistics endpoint
+    path('statistics/', StatisticsAPIView.as_view(), name='statistics'),
+
     # API endpoints
     path('', include(router.urls)),
 ]

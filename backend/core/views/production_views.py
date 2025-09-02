@@ -2,13 +2,15 @@ from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Sum, Count, Avg, Q, F
 from django.utils import timezone
 from datetime import timedelta
-from core.models import ProductionOrder
+from core.models import ProductionOrder, CCPLog
 from core.serializers import ProductionOrderSerializer, ProductionOrderCreateSerializer, ProductionOrderUpdateSerializer
 from core.services.production_service import ProductionService, ProductionQueryService, MaterialTraceabilityService
+from core.services.haccp_service import HaccpService
 
 
 class ProductionOrderViewSet(viewsets.ModelViewSet):
@@ -66,7 +68,7 @@ class ProductionOrderViewSet(viewsets.ModelViewSet):
             })
         except Exception as e:
             return Response(
-                {'detail': str(e)}, 
+                {'detail': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
     
@@ -91,7 +93,7 @@ class ProductionOrderViewSet(viewsets.ModelViewSet):
             })
         except Exception as e:
             return Response(
-                {'detail': str(e)}, 
+                {'detail': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
     
@@ -102,7 +104,7 @@ class ProductionOrderViewSet(viewsets.ModelViewSet):
         
         if order.status != 'in_progress':
             return Response(
-                {'detail': '진행 중인 오더만 일시정지할 수 있습니다.'}, 
+                {'detail': '진행 중인 오더만 일시정지할 수 있습니다.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -126,7 +128,7 @@ class ProductionOrderViewSet(viewsets.ModelViewSet):
         
         if order.status != 'on_hold':
             return Response(
-                {'detail': '일시정지 상태의 오더만 재개할 수 있습니다.'}, 
+                {'detail': '일시정지 상태의 오더만 재개할 수 있습니다.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -297,3 +299,36 @@ class ProductionOrderViewSet(viewsets.ModelViewSet):
             },
             'top_products': list(product_performance)
         })
+
+class StatisticsAPIView(APIView):
+    """대시보드 통계 데이터 API"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        haccp_service = HaccpService()
+        
+        # HACCP 준수율 (최근 30일)
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+        compliance_stats = haccp_service.calculate_compliance_score(
+            date_from=thirty_days_ago,
+            date_to=timezone.now()
+        )
+        compliance_rate = compliance_stats.get('compliance_score', 0)
+        
+        # 중요 이탈 건수 (최근 7일)
+        seven_days_ago = timezone.now() - timedelta(days=7)
+        critical_issues_count = CCPLog.objects.filter(
+            is_within_limits=False,
+            created_at__gte=seven_days_ago
+        ).count()
+        
+        # 진행중인 생산 오더 수
+        active_orders_count = ProductionOrder.objects.filter(status='in_progress').count()
+
+        data = {
+            'compliance_rate': round(compliance_rate, 2),
+            'critical_issues_count': critical_issues_count,
+            'active_production_orders': active_orders_count,
+        }
+        
+        return Response(data)
