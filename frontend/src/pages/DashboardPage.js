@@ -1,8 +1,40 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import apiClient from '../services/apiClient';
+import { toast } from 'react-hot-toast';
 
 const DashboardPage = () => {
   const { user } = useContext(AuthContext);
+  const [stats, setStats] = useState(null);
+  const [recentCcpLogs, setRecentCcpLogs] = useState([]);
+  const [activeProductionOrders, setActiveProductionOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setLoading(true);
+      try {
+        // 여러 API를 병렬로 호출
+        const [statsRes, ccpLogsRes, prodOrdersRes] = await Promise.all([
+          apiClient.get('/api/statistics/'),
+          apiClient.get('/api/ccp-logs/?limit=5'), // 최근 5개만
+          apiClient.get('/api/production-orders/?status=in_progress'),
+        ]);
+
+        setStats(statsRes.data);
+        setRecentCcpLogs(ccpLogsRes.data.results);
+        setActiveProductionOrders(prodOrdersRes.data.results);
+
+      } catch (error) {
+        toast.error('대시보드 데이터를 불러오는 중 오류가 발생했습니다.');
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   const getRoleDisplayName = (role) => {
     switch (role) {
@@ -16,6 +48,14 @@ const DashboardPage = () => {
         return role;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>대시보드 데이터를 불러오는 중입니다...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -49,10 +89,10 @@ const DashboardPage = () => {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        중요관리점 모니터링
+                        HACCP 준수율
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        실시간 모니터링 중
+                        {stats ? `${stats.compliance_rate}%` : '로딩 중...'}
                       </dd>
                     </dl>
                   </div>
@@ -79,10 +119,10 @@ const DashboardPage = () => {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        생산 현황
+                        진행중인 생산 오더
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        정상 운영 중
+                        {activeProductionOrders ? `${activeProductionOrders.length} 건` : '로딩 중...'}
                       </dd>
                     </dl>
                   </div>
@@ -109,10 +149,10 @@ const DashboardPage = () => {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        품질 관리
+                        최근 중요 이탈
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        검사 대기 중
+                        {stats ? `${stats.critical_issues_count} 건` : '로딩 중...'}
                       </dd>
                     </dl>
                   </div>
@@ -121,7 +161,7 @@ const DashboardPage = () => {
               <div className="bg-gray-50 px-5 py-3">
                 <div className="text-sm">
                   <button className="font-medium text-yellow-600 hover:text-yellow-500">
-                    품질 검사 보기
+                    이슈 목록 보기
                   </button>
                 </div>
               </div>
@@ -133,38 +173,31 @@ const DashboardPage = () => {
             <div className="bg-white shadow rounded-lg">
               <div className="px-4 py-5 sm:p-6">
                 <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  최근 활동
+                  최근 CCP 로그
                 </h3>
                 <div className="mt-5">
                   <div className="flow-root">
-                    <ul className="-my-5 divide-y divide-gray-200">
-                      <li className="py-5">
-                        <div className="relative focus-within:ring-2 focus-within:ring-indigo-500">
-                          <h3 className="text-sm font-semibold text-gray-800">
-                            CCP-001 온도 측정 완료
-                          </h3>
-                          <p className="mt-1 text-sm text-gray-600">
-                            냉장고 온도: 4.2°C (정상 범위)
-                          </p>
-                          <p className="mt-1 text-xs text-gray-500">
-                            5분 전
-                          </p>
-                        </div>
-                      </li>
-                      <li className="py-5">
-                        <div className="relative focus-within:ring-2 focus-within:ring-indigo-500">
-                          <h3 className="text-sm font-semibold text-gray-800">
-                            생산 주문 #PO-2025-001 시작
-                          </h3>
-                          <p className="mt-1 text-sm text-gray-600">
-                            제품: 프리미엄 소시지, 수량: 1000개
-                          </p>
-                          <p className="mt-1 text-xs text-gray-500">
-                            1시간 전
-                          </p>
-                        </div>
-                      </li>
-                    </ul>
+                    {recentCcpLogs.length > 0 ? (
+                      <ul className="-my-5 divide-y divide-gray-200">
+                        {recentCcpLogs.map((log) => (
+                          <li key={log.id} className="py-5">
+                            <div className="relative focus-within:ring-2 focus-within:ring-indigo-500">
+                              <h3 className="text-sm font-semibold text-gray-800">
+                                {log.ccp.name} - {log.measure_value}{log.ccp.unit}
+                              </h3>
+                              <p className={`mt-1 text-sm ${log.is_compliant ? 'text-green-600' : 'text-red-600'}`}>
+                                {log.is_compliant ? '정상' : '이탈'} (기준: {log.ccp.upper_limit})
+                              </p>
+                              <p className="mt-1 text-xs text-gray-500">
+                                {new Date(log.created_at).toLocaleString()}
+                              </p>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-sm text-gray-500">최근 활동이 없습니다.</p>
+                    )}
                   </div>
                 </div>
               </div>
