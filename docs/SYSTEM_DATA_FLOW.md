@@ -37,8 +37,10 @@ graph TD
     D -- /api/token/ --> E[TokenObtainPairView];
     D -- /api/statistics/ --> F[StatisticsAPIView];
     D -- /api/users/ --> G[UserViewSet];
+    D -- /api/production-orders/ --> H1[ProductionOrderViewSet];
     F --> H[Serializer 데이터 유효성 검사/변환];
     G --> H;
+    H1 --> H;
     H --> I[Service Layer 비즈니스 로직];
     I --> J[Model Django ORM];
     J --> K[MariaDB 데이터베이스];
@@ -177,9 +179,11 @@ graph TD
     E -- /api/statistics/ --> F[StatisticsAPIView];
     E -- /api/ccp-logs/ --> G[CCPLogViewSet];
     E -- /api/production-orders/ --> H[ProductionOrderViewSet];
+    E -- /api/finished-products/ --> H2[FinishedProductViewSet];
     F --> I[HaccpService];
     G --> J[HaccpQueryService];
     H --> K[ProductionService];
+    H2 --> K;
     I --> L[MariaDB 데이터베이스];
     J --> L;
     K --> L;
@@ -222,8 +226,14 @@ const apiClient = axios.create({
 - CCP(Critical Control Point) 관련 모든 API 호출
 - CCP 목록 조회, CCP 로그 생성/조회 등
 
+**`services/productionService.js` (구현 완료)**
+- 생산 주문 관리 전용 API 클라이언트
+- CRUD 작업: getProductionOrders(), createProductionOrder(), updateProductionOrder()
+- 생산 제어: startProduction(), completeProduction(), pauseProduction(), resumeProduction()
+- 완제품 목록: getFinishedProducts() - 생산 폼 드롭다운용
+- 대시보드 데이터: getProductionDashboard(), getUpcomingOrders()
+
 **향후 추가 예정:**
-- `services/productionService.js`: 생산 관련 API
 - `services/complianceService.js`: 컴플라이언스 리포트 API
 
 #### 2.2.3 상태 관리 계층
@@ -238,11 +248,20 @@ const apiClient = axios.create({
 **페이지 컴포넌트 (`pages/`)**
 - `DashboardPage.js`: 대시보드 통계 데이터 표시
 - `CCPLogsPage.js`: CCP 로그 관리 페이지
+- `ProductionPage.js`: 생산 주문 관리 메인 페이지 (구현 완료)
+
+**생산 관리 컴포넌트 (`components/` - 구현 완료)**
+- `forms/ProductionOrderForm.js`: 생산 주문 생성/수정 폼 (react-hook-form + 유효성 검증)
+- `lists/ProductionOrderList.js`: 생산 주문 목록 + 상태별 액션 버튼
+- `production/ProductionControls.js`: 생산 제어 패널 (시작/완료/일시정지/재개)
 
 **공통 컴포넌트 (`components/`)**
 - `forms/CCPLogForm.js`: CCP 로그 입력 폼
 - `lists/CCPLogList.js`: CCP 로그 목록 표시
 - `layout/Header.js`: 네비게이션 헤더
+
+**유틸리티 (`utils/` - 구현 완료)**
+- `dateFormatter.js`: date-fns 기반 일관된 날짜 처리
 
 ### 2.3 실제 사용 예시
 
@@ -321,7 +340,105 @@ const CCPLogForm = () => {
 };
 ```
 
-#### 예시 3: 인증이 필요한 API 호출
+#### 예시 3: 생산 주문 관리 (react-hook-form + 검증)
+
+```javascript
+// components/forms/ProductionOrderForm.js
+const ProductionOrderForm = ({ onClose, onSubmit, initialData = null }) => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setValue,
+    watch
+  } = useForm({
+    defaultValues: {
+      order_number: '',
+      finished_product_id: '',
+      planned_quantity: '',
+      planned_start_date: getCurrentDateTimeLocal(),
+      planned_end_date: (() => {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        return tomorrow.toISOString().slice(0, 16);
+      })(),
+      priority: 'normal'
+    }
+  });
+
+  const [products, setProducts] = useState([]);
+
+  // 1. 완제품 목록 API 호출 (드롭다운용)
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const productsData = await productionService.getFinishedProducts();
+        setProducts(productsData.results || productsData);
+      } catch (error) {
+        console.error('제품 목록 로드 실패:', error);
+      }
+    };
+    loadProducts();
+  }, []);
+
+  const onSubmitForm = async (data) => {
+    const submitData = {
+      ...data,
+      planned_quantity: parseInt(data.planned_quantity),
+      planned_start_date: toISOString(data.planned_start_date),
+      planned_end_date: toISOString(data.planned_end_date)
+    };
+
+    // 2. 생산 주문 생성 API 호출
+    await onSubmit(submitData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmitForm)}>
+      {/* react-hook-form으로 관리되는 폼 필드들 */}
+      <select {...register('finished_product_id', { required: '제품을 선택해주세요' })}>
+        <option value="">제품을 선택하세요</option>
+        {products.map((product) => (
+          <option key={product.id} value={product.id}>
+            {product.code} - {product.name}
+          </option>
+        ))}
+      </select>
+    </form>
+  );
+};
+```
+
+#### 예시 4: 생산 시작 처리 (Service Layer 연동)
+
+```javascript
+// pages/ProductionPage.js
+const ProductionPage = () => {
+  const [orders, setOrders] = useState([]);
+
+  // 생산 시작 처리
+  const handleStartProduction = async (orderId) => {
+    try {
+      // 1. productionService를 통해 백엔드 API 호출
+      await productionService.startProduction(orderId);
+      
+      // 2. 성공 시 사용자 피드백
+      toast.success('생산이 시작되었습니다');
+      
+      // 3. 목록 새로고침 (상태 변경 반영)
+      fetchOrders();
+    } catch (error) {
+      // 4. 백엔드에서 전달된 에러 메시지 표시
+      toast.error(error.response?.data?.detail || '생산 시작에 실패했습니다');
+    }
+  };
+
+  // 백엔드 ProductionService.start_production()이 호출되어
+  // FIFO 기반 원자재 할당 + 상태 전환이 자동으로 처리됨
+};
+```
+
+#### 예시 5: 인증이 필요한 API 호출
 
 ```javascript
 // services/authService.js에서 토큰 관리

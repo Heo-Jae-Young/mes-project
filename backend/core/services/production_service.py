@@ -82,7 +82,7 @@ class ProductionService:
         return production_order
 
     @transaction.atomic
-    def complete_production(self, production_order, produced_quantity, user):
+    def complete_production(self, production_order, produced_quantity, user, completion_notes=None):
         """
         생산 완료 처리
         - 생산량 기록 및 검증
@@ -114,6 +114,14 @@ class ProductionService:
         production_order.status = 'completed'
         production_order.produced_quantity = produced_quantity
         production_order.actual_end_date = timezone.now()
+        
+        # 완료 메모 추가
+        if completion_notes:
+            if production_order.notes:
+                production_order.notes += f"\n완료 메모: {completion_notes}"
+            else:
+                production_order.notes = f"완료 메모: {completion_notes}"
+        
         production_order.save()
         
         return production_order
@@ -166,10 +174,10 @@ class ProductionService:
         (실제로는 BOM - Bill of Materials 테이블이 필요하지만, 임시로 간단한 로직 구현)
         """
         # TODO: BOM 테이블 구현 후 실제 계산 로직 적용
-        # 현재는 샘플 데이터로 대체
+        # 현재는 샘플 데이터로 대체 (Decimal 연산으로 처리)
         return {
-            f'RM-{production_order.finished_product.code}-001': production_order.planned_quantity * 0.5,
-            f'RM-{production_order.finished_product.code}-002': production_order.planned_quantity * 0.3,
+            f'RM-{production_order.finished_product.code}-001': production_order.planned_quantity * Decimal('0.5'),
+            f'RM-{production_order.finished_product.code}-002': production_order.planned_quantity * Decimal('0.3'),
         }
 
     def _get_available_material_quantity(self, material_code):

@@ -6,13 +6,20 @@ HACCP 기반 식품 안전 규정 준수를 위한 제조 실행 시스템(MES) 
 
 식품 제조업체를 위한 디지털 HACCP 관리 시스템으로, HACCP 7원칙을 디지털화한 제조 실행 관리 플랫폼입니다.
 
-### 핵심 기능 (구현 완료 ✅)
-- 🔍 **HACCP 중요관리점(CCP) 모니터링** - 실시간 측정값 기록 및 이탈 감지
-- 📊 **생산 관리 및 추적** - 생산 주문, 원자재 할당, 효율성 계산
-- 🏭 **완전한 추적성(Traceability)** - 원자재 LOT부터 완제품까지 양방향 추적
-- 👥 **역할 기반 접근 제어** - Admin, Quality Manager, Operator 권한 시스템
-- 📋 **컴플라이언스 보고서** - HACCP 준수율 자동 계산 및 보고서 생성
-- 🚨 **중요 알림 시스템** - CCP 이탈 시 즉시 알림 및 대응 조치
+### 핵심 기능
+
+**✅ 구현 완료**
+- 🔍 **HACCP CCP 로그 관리 시스템** - 실시간 측정값 입력, 검증, 이탈 감지 및 목록 조회
+- 📊 **대시보드 통계** - HACCP 준수율, 중요 이탈 건수, 진행중 생산 오더 실시간 표시
+- 👥 **역할 기반 인증 시스템** - JWT 기반 Admin, Quality Manager, Operator 권한 제어
+- 🗃️ **완전한 데이터 모델링** - User, CCP, CCPLog, ProductionOrder 등 8개 도메인 모델
+- ⚙️ **Service Layer 아키텍처** - 비즈니스 로직 분리, 테스트 가능한 구조
+- 🏭 **생산 오더 관리 시스템** - 생산 주문 생성/상태 관리/FIFO 원자재 할당/완료 처리
+
+**🚧 개발 중 (다음 우선순위)**
+- 📦 **원자재 관리 시스템** - 원자재 입고/재고/유통기한 관리 기능
+- 📈 **HACCP 컴플라이언스 리포트** - 상세 분석 및 시각화
+- 🚨 **실시간 알림 시스템** - WebSocket 기반 중요 이탈 즉시 알림
 
 ## 🛠 기술 스택
 
@@ -25,11 +32,11 @@ HACCP 기반 식품 안전 규정 준수를 위한 제조 실행 시스템(MES) 
 - 25개 단위 테스트 (pytest-django)
 
 **Frontend:**
-- React 18+ (구현 완료)
-- Axios for API communication
-- Tailwind CSS
+- React 18+ with React Hook Form + date-fns
+- Axios API client with interceptors
+- Tailwind CSS with responsive design
 - React Router DOM
-- Context API for state management
+- Context API for global auth state management
 
 **Infrastructure:**
 - Docker Compose for development
@@ -86,20 +93,49 @@ cd ../frontend && npm start
 - **Swagger UI**: http://localhost:8000/api/docs/
 - **Django Admin**: http://localhost:8000/admin/ (admin/admin123)
 
+## 🎨 주요 구현 화면
+
+### 🔐 로그인 시스템
+- JWT 기반 인증 (자동 토큰 갱신)
+- 역할별 권한 제어 (Admin, Quality Manager, Operator)
+
+### 📊 대시보드
+- **HACCP 준수율**: 실시간 계산된 규정 준수 비율
+- **진행중 생산 오더**: 현재 진행 상태의 생산 주문 건수
+- **중요 이탈 건수**: 최근 24시간 내 CCP 한계값 이탈 사례
+
+### 📝 CCP 로그 관리
+- **실시간 입력**: CCP 선택, 측정값 입력, 단위 설정
+- **자동 검증**: 한계값 이탈 여부 자동 판단
+- **목록 조회**: 페이지네이션, 권한별 필터링
+- **중복 방지**: 1분 내 동일 CCP 중복 입력 차단
+
+### 🏭 생산 오더 관리
+- **생산 주문 생성**: react-hook-form 기반 완제품 선택, 수량/일정 입력
+- **상태 관리**: planned → in_progress → completed 완전한 라이프사이클
+- **FIFO 원자재 할당**: 유통기한 기준 선입선출 자동 재고 할당
+- **실시간 제어**: 생산 시작/완료/일시정지/재개 버튼식 제어
+- **진행률 추적**: 계획 대비 실제 생산량 시각화
+
 ## 📖 문서
 
-### 주요 문서
-- [CLAUDE.md](./CLAUDE.md) - 프로젝트 메인 가이드 (개발 환경, Quick Reference)
+### 📋 주요 문서 (5개 카테고리)
+- **[CLAUDE.md](./CLAUDE.md)** - 📚 **메인 개발 가이드** (개발 환경, 빠른 참조, 커밋 가이드라인)
+
+**🏗️ 프로젝트 & 아키텍처**
+- [docs/ARCHITECTURE_PATTERNS.md](./docs/ARCHITECTURE_PATTERNS.md) - 코드 아키텍처 패턴 및 설계 원칙
+
+**🔧 기술 구현**
+- [docs/SYSTEM_DATA_FLOW.md](./docs/SYSTEM_DATA_FLOW.md) - 백엔드/프론트엔드 전체 데이터 플로우 가이드
+- [backend/docs/SERVICE_LAYER.md](./backend/docs/SERVICE_LAYER.md) - Service Layer 패턴과 비즈니스 로직 구조
+- [backend/docs/TESTING_GUIDE.md](./backend/docs/TESTING_GUIDE.md) - 테스트 아키텍처 및 실행 가이드
+
+**🛠️ 설정 & 운영**
 - [docs/DATABASE_SETUP.md](./docs/DATABASE_SETUP.md) - 데이터베이스 초기 설정부터 운영까지 완전 가이드
 - [docs/SERVER_SCRIPTS.md](./docs/SERVER_SCRIPTS.md) - 서버 관리 자동화 스크립트 상세 가이드
 
-### 기술 문서
-- [backend/docs/SERVICE_LAYER.md](./backend/docs/SERVICE_LAYER.md) - Service Layer 패턴과 비즈니스 로직 구조
-- [backend/docs/TESTING_GUIDE.md](./backend/docs/TESTING_GUIDE.md) - 테스트 아키텍처 및 실행 가이드
-- [docs/ARCHITECTURE_PATTERNS.md](./docs/ARCHITECTURE_PATTERNS.md) - 코드 아키텍처 패턴 및 설계 원칙
-
-### 개발 문서
-- [docs/DEVELOPMENT_BEST_PRACTICES.md](./docs/DEVELOPMENT_BEST_PRACTICES.md) - 개발 노하우 및 베스트 프랙티스
+**📝 개발 가이드**
+- [docs/DEVELOPMENT_BEST_PRACTICES.md](./docs/DEVELOPMENT_BEST_PRACTICES.md) - **커밋 가이드라인** 및 개발 베스트 프랙티스
 - [docs/DEVELOPMENT_LOG.md](./docs/DEVELOPMENT_LOG.md) - 개발 이력 및 주요 학습 내용
 
 ## 🗂 프로젝트 구조
@@ -118,12 +154,17 @@ mes-project/
 │   │   ├── views/           # API ViewSets
 │   │   └── tests/           # 25개 단위 테스트
 │   └── docs/                # 백엔드 기술 문서
-├── frontend/                # React 프론트엔드 (기본 완료)
+├── frontend/                # React 프론트엔드 (80% 완료)
 │   ├── src/
 │   │   ├── components/      # 재사용 UI 컴포넌트
-│   │   ├── pages/           # 페이지별 컴포넌트 (Login, Dashboard)
-│   │   ├── services/        # API 클라이언트 (Axios)
-│   │   └── context/         # 전역 상태 관리
+│   │   │   ├── forms/       # 폼 컴포넌트 (CCPLogForm, ProductionOrderForm)
+│   │   │   ├── lists/       # 목록 컴포넌트 (CCPLogList, ProductionOrderList)
+│   │   │   ├── layout/      # 레이아웃 컴포넌트 (Header)
+│   │   │   └── production/  # 생산 관리 컴포넌트 (ProductionControls)
+│   │   ├── pages/           # 페이지별 컴포넌트 (Login, Dashboard, CCPLogs, ProductionPage)
+│   │   ├── services/        # API 서비스 레이어 (authService, ccpService, productionService)
+│   │   ├── utils/           # 유틸리티 (dateFormatter)
+│   │   └── context/         # 전역 상태 관리 (AuthContext)
 │   └── docs/                # 프론트엔드 기술 문서
 ├── docs/                    # 프로젝트 일반 문서
 │   ├── DATABASE_SETUP.md    # DB 설정 완전 가이드
@@ -134,31 +175,37 @@ mes-project/
 
 ## 🏗 개발 진행률
 
-### ✅ Backend (98% 완료)
+### ✅ Backend (90% 완료)
 - [x] Django 5.2.5 + DRF 환경 구성
 - [x] MariaDB Docker 연동 및 설정
-- [x] JWT 인증 시스템 (`/api/token/`)
+- [x] JWT 인증 시스템 (토큰 생성/갱신/검증)
 - [x] HACCP 모델 8개 구현 (User, Supplier, CCP, CCPLog 등)
-- [x] Service Layer 아키텍처 구현
-- [x] REST API 개발 (ViewSets + Serializers)
+- [x] Service Layer 아키텍처 + 상수 관리 시스템
+- [x] REST API 개발 (ViewSets + Serializers + 권한 필터링)
 - [x] 대시보드 통계 API (`/api/statistics/`)
 - [x] HACCP 중요 알림 API (`/api/ccps/critical_alerts/`)
+- [x] **생산 관리 Service Layer**: FIFO 원자재 할당, Decimal 정밀 연산
 - [x] 25개 단위 테스트 작성 및 통과
 - [x] API 문서화 (Swagger UI)
+- [x] 아키텍처 개선: 레이어별 책임 분리, 중복 코드 제거
+- [ ] 원자재 관리 API (입고/재고/유통기한 관리)
 
-### ✅ Frontend (40% 완료)
+### ✅ Frontend (80% 완료)
 - [x] React 18+ 프로젝트 구조
-- [x] 로그인/로그아웃 기능 (JWT 인증)
+- [x] JWT 기반 로그인/로그아웃 (자동 토큰 갱신)
 - [x] Context API 기반 전역 상태 관리
-- [x] 대시보드 페이지 (동적 데이터 연동)
-- [x] Axios 기반 API 클라이언트
-- [ ] CCP 로그 입력 폼
-- [ ] 생산 오더 관리 UI
-- [ ] HACCP 컴플라이언스 리포트
+- [x] 대시보드 페이지 (실시간 통계 데이터 연동)
+- [x] Axios 기반 API 클라이언트 (인터셉터, 에러 처리)
+- [x] CCP 로그 관리 시스템: 입력 폼, 목록 조회, 페이지네이션
+- [x] 네비게이션 시스템: Header 메뉴 및 라우팅 구조
+- [x] **생산 오더 관리 UI**: 생성 폼, 목록, 상태별 제어 버튼, 진행률 시각화
+- [x] **react-hook-form + date-fns**: 고급 폼 검증 및 날짜 처리
+- [ ] 원자재 관리 UI (입고/재고 현황/유통기한 알림)
+- [ ] HACCP 컴플라이언스 리포트 (차트/시각화)
 
 ### ❌ Infrastructure (0% 완료)
-- [ ] Docker 컨테이너화
-- [ ] Nginx 프로덕션 환경
+- [ ] Docker 컨테이너화 (Django, React, MariaDB)
+- [ ] Nginx 프로덕션 환경 설정
 - [ ] 클라우드 배포 (AWS/DigitalOcean)
 
 ## 📋 주요 명령어

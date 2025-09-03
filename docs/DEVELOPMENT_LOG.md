@@ -149,3 +149,71 @@
 
 **상태**: feature/ccp-log-management 브랜치에서 작업 완료, PR 준비 중
 - docker-compose.yml 최신 문법 (version 필드 제거)
+
+## 2025-09-03: 생산 오더 관리 시스템 완전 구현 완료
+
+### 🎯 구현 범위
+- **완전한 생산 주문 라이프사이클**: planned → in_progress → completed 상태 전환 관리
+- **Service Layer 패턴**: ProductionService에서 비즈니스 로직 집중 처리
+- **FIFO 원자재 할당**: 유통기한 기준 선입선출 재고 관리 시스템
+- **React 완제품 폼**: react-hook-form + date-fns 활용한 고급 폼 처리
+
+### 🛠️ 핵심 기술적 해결사항
+
+#### 1. 데이터베이스 필드 타입 일관성 문제
+- **문제**: 생산 수량 필드가 IntegerField와 DecimalField 혼재로 부동소수점 연산 오류 발생
+- **해결**: 모든 수량 관련 필드를 DecimalField로 통일하여 정확한 산술 연산 보장
+- **영향**: `ProductionOrder.planned_quantity`, `produced_quantity` → DecimalField(max_digits=10, decimal_places=2)
+
+#### 2. Service Layer 비즈니스 로직 강화
+- **start_production()**: 원자재 가용성 검증 + FIFO 할당 + 상태 전환
+- **complete_production()**: 완료 수량 검증 + 재고 업데이트 + completion_notes 기록
+- **_calculate_required_materials()**: BOM 기반 원자재 소요량 자동 계산 (Decimal 정밀도)
+
+#### 3. Frontend 폼 유효성 검증 시스템
+- **react-hook-form**: 실시간 검증과 사용자 경험 개선
+- **date-fns**: 일관된 날짜 포맷팅 (getCurrentDateTimeLocal, toISOString)
+- **드롭다운 API 연동**: 완제품 목록을 getFinishedProducts API로 동적 로드
+
+### 📂 구현된 파일들
+
+**Backend 개선:**
+- `core/models/production.py`: DecimalField 마이그레이션 적용
+- `core/services/production_service.py`: 완료 처리 강화 및 Decimal 산술 정확도 개선
+
+**Frontend 신규 구현:**
+- `src/services/productionService.js`: 생산 관리 전용 API 클라이언트
+- `src/pages/ProductionPage.js`: 메인 생산 관리 인터페이스 (필터링, 검색, 액션)
+- `src/components/lists/ProductionOrderList.js`: 진행률 시각화 및 상태별 액션 버튼
+- `src/components/forms/ProductionOrderForm.js`: 고급 폼 검증 및 완제품 선택
+- `src/utils/dateFormatter.js`: date-fns 기반 일관된 날짜 처리
+
+### 🔬 해결한 기술적 문제들
+
+#### API URL 중복 문제 (404 /api/api/production-orders/)
+- **원인**: apiClient 베이스 URL에 /api/ 포함 + service에서 /api/ 중복 사용
+- **해결**: productionService.js에서 /api/ 접두사 제거하여 정확한 경로 구성
+
+#### Decimal-Float 연산 정확도 오류
+- **원인**: Python에서 float * Decimal 연산 시 정밀도 손실
+- **해결**: _calculate_required_materials에서 모든 승수를 Decimal로 변환
+
+#### 원자재 데이터 부족으로 생산 시작 실패
+- **원인**: 완제품용 원자재 데이터 미비로 재고 할당 불가
+- **해결**: shell 명령으로 적절한 원자재 재고(MaterialLot) 생성하여 FIFO 할당 가능하게 구성
+
+### 🎓 핵심 학습 내용
+
+1. **Manufacturing System 이해**: MES의 핵심인 생산 계획 → 실행 → 완료 프로세스
+2. **FIFO 재고 관리**: 유통기한(expiry_date) 기준 선입선출 로직의 실제 구현
+3. **Decimal 정밀 연산**: 제조업에서 중요한 수량/비용 계산의 정확도 보장
+4. **React 고급 폼 처리**: useForm + 실시간 검증 + API 연동의 베스트 프랙티스
+
+### ✅ 완성된 기능
+- ✅ 생산 주문 생성/조회/필터링/검색
+- ✅ 생산 시작/완료/일시정지/재개 처리
+- ✅ 원자재 가용성 검증 및 자동 할당
+- ✅ 실시간 진행률 계산 및 시각화
+- ✅ 완제품별 생산 폼 및 유효성 검증
+
+**상태**: feature/service-layer 브랜치에서 완전 구현 완료, 커밋 완료

@@ -9,6 +9,7 @@ HACCP 기반 식품 안전 규정 준수 MES (Manufacturing Execution System) Sa
 ## Technology Stack
 
 **Backend:**
+
 - Django 5.2.5 + Django REST Framework 3.16
 - JWT Authentication (djangorestframework-simplejwt)
 - MariaDB (Docker container)
@@ -16,23 +17,27 @@ HACCP 기반 식품 안전 규정 준수 MES (Manufacturing Execution System) Sa
 - Testing: pytest-django + pytest-cov
 
 **Frontend:**
+
 - React 18+
 - Axios for API communication
 - Tailwind CSS
 - React Router DOM
 
 **Infrastructure:**
+
 - Docker Compose for development
 - Nginx for production (planned)
 
 ## Development Setup
 
 ### Prerequisites
+
 - Docker and Docker Compose
 - Python 3.12.7 (managed via asdf)
 - Node.js 18+ and npm
 
 ### Quick Start
+
 ```bash
 # 1. Clone and setup
 git clone <repository-url>
@@ -60,11 +65,14 @@ npm install
 ```
 
 ### Detailed Setup Guide
+
 **처음 설정하는 경우 반드시 읽어주세요:**
+
 - `docs/DATABASE_SETUP.md`: 데이터베이스 초기 설정부터 운영까지 상세 가이드
 - `docs/SERVER_SCRIPTS.md`: 서버 관리 자동화 스크립트 사용법
 
 ### Common Commands
+
 - **데이터베이스 마이그레이션:** `python manage.py migrate`
 - **관리자 계정 생성:** `python manage.py createsuperuser`
 - **시드 데이터 로드:** `python manage.py seed_data --clear` (admin/admin123 계정 자동 생성)
@@ -74,7 +82,9 @@ npm install
 ## Architecture Overview
 
 ### HACCP-Based Design
+
 핵심 설계 원칙은 HACCP 7원칙을 디지털화하는 것:
+
 1. 위해요소 분석 (Hazard Analysis)
 2. 중요 관리점 결정 (Critical Control Points)
 3. 한계 기준 설정 (Critical Limits)
@@ -84,6 +94,7 @@ npm install
 7. 문서화 및 기록 유지 (Documentation)
 
 ### Database Models
+
 - **User:** Role-based access control
 - **Supplier:** Supplier management
 - **RawMaterial:** Raw material catalog
@@ -96,64 +107,118 @@ npm install
 ## Current Project Status
 
 ### 📊 Overall Progress
-- **백엔드**: 99% (완료 - API, Service Layer, Tests, 아키텍처 개선)
-- **프론트엔드**: 60% (기본 구조 + 로그인 + 대시보드 + CCP 로그 관리)
+
+- **백엔드**: 90% (핵심 API + 생산 관리 완료, 원자재 관리 API 미구현)
+- **프론트엔드**: 80% (인증 + 대시보드 + CCP 로그 + 생산 관리 완료, 원자재 관리 UI 미구현)
 - **배포**: 0% (미구현)
 
-### ✅ Completed Features
+### 🏗️ Technical Infrastructure
 
-**Backend Infrastructure**
-- Django 5.2.5 + DRF + MariaDB Docker 연동
-- JWT 인증 시스템 (`/api/token/`, `/api/token/refresh/`, `/api/token/verify/`)
-- HACCP 모델 8개 구현 (User, Supplier, RawMaterial, MaterialLot, FinishedProduct, ProductionOrder, CCP, CCPLog)
-- Service Layer 구현 (HaccpService, ProductionService, SupplierService)
-- DRF API 구현 (ViewSets + Serializers + 권한 필터링)
-- 대시보드 통계 API (`/api/statistics/`)
-- HACCP 중요 알림 API (`/api/ccps/critical_alerts/`) 정상 작동
-- 체계적인 테스트 아키텍처 (25개 단위 테스트 통과)
-- **🆕 레이어별 책임 분리 개선**: 중복 코드 제거, 올바른 아키텍처 적용
-- **🆕 상수 관리**: 하드코딩된 값들을 `constants.py`로 분리
+**Backend Stack**
 
-**Frontend Infrastructure**  
-- React 18+ 프로젝트 구조
-- 로그인/로그아웃 기능 (JWT 인증)
-- Context API 기반 전역 상태 관리
-- 대시보드 페이지 (동적 데이터 연동)
-- Axios 기반 API 클라이언트
-- **🆕 CCP 로그 관리 기능**: 입력 폼, 목록 조회, 필터링, 페이지네이션
-- **🆕 네비게이션 시스템**: Header 메뉴와 라우팅 구조 완성
+- Django 5.2.5 + Django REST Framework 3.16
+- MariaDB (Docker container)
+- JWT Authentication (djangorestframework-simplejwt)
+- Service Layer Architecture Pattern
+- Repository Pattern for complex queries
+- pytest-django + pytest-cov testing framework
 
-### ⚠️ Known Issues
-- 없음 (모든 핵심 API 정상 작동, 아키텍처 개선 완료)
+**Frontend Stack**
 
-### 🎯 Next Steps
+- React 18+ with modern hooks
+- Axios API client with JWT interceptors
+- Context API for global state management
+- Tailwind CSS for styling
+- date-fns for date handling
+- react-hook-form for form validation
+- @heroicons/react for icons
 
-**단기 목표 (우선순위)**
-1. **생산 오더 관리**: 생산 시작/완료 처리 기능
-   - 생산 오더 상태 관리 (planned → in_progress → completed)
-   - 생산 진행률 추적 및 업데이트 API
-   - 프론트엔드 생산 관리 페이지 구현
-2. **HACCP 컴플라이언스 리포트**: 상세 분석 및 시각화
-   - CCP별 규정 준수율 대시보드
-   - 시간대별 트렌드 차트 구현
-   - PDF 리포트 생성 기능
-3. **실시간 알림 개선**: WebSocket 기반 실시간 알림
-   - Django Channels 설정
-   - 중요 이탈 발생 시 즉시 알림
+**Data Models (HACCP-based)**
 
-**중기 목표**
-1. **실시간 알림 시스템**: 중요 이탈 발생 시 즉시 알림
-2. **모바일 반응형 UI**: 태블릿/모바일 환경 최적화
-3. **데이터 시각화**: 차트 및 그래프 라이브러리 연동
+- User (role-based access control)
+- Supplier, RawMaterial, MaterialLot (supply chain)
+- FinishedProduct, ProductionOrder (manufacturing)
+- CCP, CCPLog (HACCP compliance)
 
-**장기 목표**
-1. **Docker 컨테이너화**: Django, React, MariaDB
-2. **Nginx 설정**: 프로덕션 환경 구성
-3. **클라우드 배포**: AWS/DigitalOcean 배포
+### ✅ Implemented Features
+
+**Authentication & Authorization**
+
+- JWT 기반 로그인/로그아웃 (`/api/token/`, `/api/token/refresh/`, `/api/token/verify/`)
+- 역할별 권한 제어 (admin, quality_manager, operator)
+- 보호된 라우트 및 API 엔드포인트
+
+**Dashboard & Analytics**
+
+- 실시간 대시보드 (`/dashboard`)
+- 통계 API (`/api/statistics/`)
+- HACCP 중요 알림 (`/api/ccps/critical_alerts/`)
+
+**HACCP Compliance Management**
+
+- CCP(Critical Control Point) 정의 및 관리
+- CCP 로그 입력/조회/필터링 (`/ccp-logs`)
+- 한계 기준 초과 시 자동 알림
+- 완전한 CRUD 및 페이지네이션
+
+**Production Order Management**
+
+- 생산 주문 생성/조회/수정 (`/production`)
+- 상태 관리: planned → in_progress → completed
+- 생산 시작/완료/일시정지/재개 처리
+- 원자재 가용성 검증 및 FIFO 할당 (Service Layer 패턴)
+- 실시간 진행률 시각화 및 필터링/검색
+- 완제품 선택 드롭다운 및 폼 유효성 검증
+
+### 🚧 In Progress
+
+- **원자재 관리 시스템**: 원자재 입고/재고/유통기한 관리 기능 (다음 스프린트)
+
+### ⚠️ Current Limitations
+
+- **원자재 관리 UI 미구현**: 현재 shell 명령으로만 원자재 데이터 생성 가능
+- **BOM(Bill of Materials) 미구현**: 제품별 원자재 소요량을 하드코딩으로 계산
+- **공급업체 관리 UI 미구현**: 공급업체 등록/관리 기능 필요
+
+### 📋 Planned Features
+
+**최우선 (현재 작업)**
+
+1. **원자재 관리 시스템** 📦
+   - 원자재 카탈로그 관리 (등록/수정/조회)
+   - 원자재 입고 처리 (MaterialLot 생성)
+   - 재고 현황 대시보드 및 유통기한 알림
+   - 공급업체별 원자재 관리
+
+**단기 목표** 2. **BOM(Bill of Materials) 구현** 🔧
+
+- 제품별 원자재 소요량 정확한 관리
+- 생산 계획 시 정확한 원자재 소요량 계산
+
+3. **HACCP 컴플라이언스 리포트** 📊
+   - CCP별 규정 준수율 대시보드 (chart.js 활용)
+   - 시간대별 트렌드 차트 및 분석
+   - PDF/Excel 리포트 내보내기
+
+**중기 목표** 4. **실시간 알림 시스템** 🔔
+
+- WebSocket 기반 실시간 알림 (Django Channels)
+- 중요 이탈/유통기한 임박 등 즉시 알림
+
+5. **모바일 반응형 UI** 📱
+   - 태블릿/모바일 환경 최적화
+   - PWA(Progressive Web App) 지원
+
+**장기 목표** 6. **배포 및 운영** 🚀
+
+- Docker 컨테이너화 (Django, React, MariaDB)
+- Nginx 프로덕션 환경 구성
+- 클라우드 배포 (AWS/DigitalOcean)
 
 ## Environment Variables
 
 Required `.env` file in backend directory:
+
 ```bash
 SECRET_KEY="your-django-secret-key"
 DEBUG=True
@@ -175,14 +240,16 @@ DATABASE_PORT=3306
 ## 📚 Documentation
 
 ### 🏗️ Project & Architecture (프로젝트 및 아키텍처)
+
 **📖 언제 보나요?** 프로젝트 전체 구조를 이해하거나, 새로운 아키텍처 패턴을 도입할 때  
 **✍️ 언제 기록하나요?** 주요 설계 결정, 기술 스택 변경, 아키텍처 패턴 도입 시
 
 - `docs/PROJECT_ARCHITECTURE.md`: 전체 프로젝트 구조 및 모노레포 가이드
-- `docs/ARCHITECTURE_PATTERNS.md`: 코드 아키텍처 패턴 및 설계 원칙  
+- `docs/ARCHITECTURE_PATTERNS.md`: 코드 아키텍처 패턴 및 설계 원칙
 - `docs/TECH_STACK_DECISIONS.md`: 기술 스택 선택 근거 및 의사결정 과정
 
 ### 🔧 Technical Implementation (기술 구현)
+
 **📖 언제 보나요?** 새로운 기능 구현하거나, 기존 코드 수정할 때  
 **✍️ 언제 기록하나요?** 복잡한 구현 패턴, 데이터 플로우, API 설계 완료 시
 
@@ -191,7 +258,8 @@ DATABASE_PORT=3306
 - `backend/docs/API_ROUTING.md`: Django DRF 라우팅 시스템 해설
 - `backend/docs/TESTING_GUIDE.md`: 테스트 아키텍처 및 실행 가이드
 
-### 🛠️ Setup & Operations (설정 및 운영)  
+### 🛠️ Setup & Operations (설정 및 운영)
+
 **📖 언제 보나요?** 개발 환경 구축하거나, 서버 관리할 때  
 **✍️ 언제 기록하나요?** 환경 설정 방법 변경, 새로운 운영 스크립트 추가 시
 
@@ -199,6 +267,7 @@ DATABASE_PORT=3306
 - `docs/SERVER_SCRIPTS.md`: 서버 관리 자동화 스크립트 상세 가이드
 
 ### 📝 Development Guide (개발 가이드)
+
 **📖 언제 보나요?** 개발 프로세스 확인하거나, 과거 작업 내용 참고할 때  
 **✍️ 언제 기록하나요?** 주요 기능 완성, 새로운 개발 노하우 습득, 베스트 프랙티스 발견 시
 
@@ -206,6 +275,7 @@ DATABASE_PORT=3306
 - `docs/DEVELOPMENT_BEST_PRACTICES.md`: 개발 노하우 및 베스트 프랙티스
 
 ### 🐛 Problem Solving (문제 해결)
+
 **📖 언제 보나요?** 비슷한 에러나 문제 상황에 직면했을 때  
 **✍️ 언제 기록하나요?** 해결하기 어려웠던 버그, 환경 이슈, 호환성 문제 해결 후
 
@@ -224,9 +294,16 @@ DATABASE_PORT=3306
 
 **핵심**: "왜 이 방법을 선택했는가?"에 대한 명확한 설명 포함
 
+**자동 생성 문구 금지**
+
+```
+❌ 🤖 Generated with [Claude Code](https://claude.ai/code)
+```
+
 📚 **상세한 가이드라인**: `docs/DEVELOPMENT_BEST_PRACTICES.md` 참조
 
 ### Code Architecture Patterns
+
 - **Service Layer**: 비즈니스 로직을 service.py에서 처리, view는 얇게 유지
 - **Repository Pattern**: 복잡한 쿼리 로직은 별도 repository 클래스로 분리
 - **Custom Hooks**: API 호출, 상태 관리 로직을 훅으로 추상화
@@ -237,6 +314,7 @@ DATABASE_PORT=3306
 ### Server Management
 
 #### 자동화 스크립트 (권장)
+
 ```bash
 # 서버 재시작 (백엔드 + 프론트엔드)
 ./scripts/restart_servers.sh
@@ -249,11 +327,12 @@ DATABASE_PORT=3306
 ```
 
 #### 수동 실행
+
 ```bash
 # 백엔드 단독 실행
 cd backend && source venv/bin/activate && python manage.py runserver
 
-# 프론트엔드 단독 실행  
+# 프론트엔드 단독 실행
 cd frontend && npm start
 
 # 포트 충돌 해결
@@ -262,6 +341,7 @@ lsof -t -i :3000 | xargs kill -9  # 프론트엔드 포트
 ```
 
 ### Testing
+
 ```bash
 # 전체 테스트 실행
 pytest -v
@@ -274,6 +354,7 @@ pytest --cov=core --cov-report=html
 ```
 
 ### Database Management
+
 ```bash
 # 시드 데이터 로드 (관리자 계정 포함)
 python manage.py seed_data --clear
