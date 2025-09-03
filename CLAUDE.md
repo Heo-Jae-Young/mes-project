@@ -214,11 +214,17 @@ DATABASE_PORT=3306
 ## Development Best Practices
 
 ### Commit Message Guidelines
-- **WHY 먼저**: 왜 이 작업을 했는지 배경과 문제점 설명
-- **WHAT 구체적으로**: 실제 구현한 클래스/메소드명 나열
-- **HOW 경험담**: 삽질했던 부분과 해결 과정 솔직하게 기록
-- **결과 요약**: 테스트 통과, 커버리지 등 정량적 결과
-- Generated with [Claude Code] 같은 자동 생성 문구 사용 금지
+
+**기본 구조**: WHY → WHAT → HOW → 결과
+
+- **WHY**: 왜 이 작업을 했는지 배경과 문제점 설명
+- **WHAT**: 실제 구현한 클래스/메소드명을 구체적으로 나열
+- **HOW**: 문제 → 해결책 → **결정 근거** 순으로 기술 (가장 중요)
+- **결과**: 테스트 통과, 커버리지 등 정량적 결과
+
+**핵심**: "왜 이 방법을 선택했는가?"에 대한 명확한 설명 포함
+
+📚 **상세한 가이드라인**: `docs/DEVELOPMENT_BEST_PRACTICES.md` 참조
 
 ### Code Architecture Patterns
 - **Service Layer**: 비즈니스 로직을 service.py에서 처리, view는 얇게 유지
