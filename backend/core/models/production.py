@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator
+from decimal import Decimal
 from .user import User
 from .product import FinishedProduct
 import uuid
@@ -26,8 +27,16 @@ class ProductionOrder(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     order_number = models.CharField(max_length=50, unique=True)
     finished_product = models.ForeignKey(FinishedProduct, on_delete=models.PROTECT, related_name='production_orders')
-    planned_quantity = models.IntegerField(validators=[MinValueValidator(1)])
-    produced_quantity = models.IntegerField(default=0)
+    planned_quantity = models.DecimalField(
+        max_digits=10, 
+        decimal_places=3, 
+        validators=[MinValueValidator(Decimal('0.001'))]
+    )
+    produced_quantity = models.DecimalField(
+        max_digits=10, 
+        decimal_places=3, 
+        default=Decimal('0.000')
+    )
     planned_start_date = models.DateTimeField()
     planned_end_date = models.DateTimeField()
     actual_start_date = models.DateTimeField(null=True, blank=True)

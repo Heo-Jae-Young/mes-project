@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
@@ -7,6 +6,7 @@ import Header from './components/layout/Header';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import CCPLogsPage from './pages/CCPLogsPage';
+import ProductionPage from './pages/ProductionPage';
 
 function App() {
   return (
@@ -29,6 +29,12 @@ function App() {
             <Route path="/ccp-logs" element={
               <ProtectedRoute>
                 <CCPLogsPage />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/production" element={
+              <ProtectedRoute>
+                <ProductionPage />
               </ProtectedRoute>
             } />
             

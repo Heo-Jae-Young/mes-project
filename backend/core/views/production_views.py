@@ -82,8 +82,9 @@ class ProductionOrderViewSet(viewsets.ModelViewSet):
         try:
             # Service를 통한 생산 완료 처리
             updated_order = self.production_service.complete_production(
-                order=order,
+                production_order=order,
                 produced_quantity=produced_quantity,
+                user=request.user,
                 completion_notes=completion_notes
             )
             serializer = ProductionOrderSerializer(updated_order)
