@@ -6,37 +6,55 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
 from core.models import CCP, CCPLog, ProductionOrder
+from core.constants import (
+    DUPLICATE_MEASUREMENT_THRESHOLD_MINUTES,
+    VERIFICATION_REQUIRED_HOURS,
+    CRITICAL_ALERT_HOURS,
+    CONSECUTIVE_VIOLATION_DETECTION_HOURS,
+    CONSECUTIVE_VIOLATION_THRESHOLD
+)
 
 
 class HaccpService:
     """HACCP 7원칙 준수를 위한 핵심 비즈니스 로직"""
 
-    def validate_ccp_log_creation(self, ccp, measured_value, measured_at, created_by):
+    def validate_ccp_log_creation(self, ccp_id, measured_value, measured_at, created_by):
         """
-        CCP 로그 생성 전 검증
-        - CCP 활성 상태 확인
-        - 측정값 유효성 검증
+        CCP 로그 생성 전 검증 (비즈니스 로직 처리)
+        - CCP 존재 및 활성 상태 확인
+        - 측정값 유효성 검증  
         - 권한 확인 (operator 이상)
-        """
-        if not ccp.is_active:
-            raise ValidationError(f'비활성 CCP ({ccp.name})에는 로그를 기록할 수 없습니다.')
+        - 중복 측정 방지
         
+        Returns:
+            CCP: 검증된 CCP 인스턴스
+        """
+        # CCP 조회 및 활성 상태 확인
+        try:
+            ccp = CCP.objects.get(id=ccp_id, is_active=True)
+        except CCP.DoesNotExist:
+            raise ValidationError('존재하지 않거나 비활성화된 CCP입니다.')
+        
+        # 권한 확인
         if created_by.role not in ['admin', 'quality_manager', 'operator']:
             raise PermissionDenied('CCP 로그 기록 권한이 없습니다.')
         
+        # 시간 검증
         if measured_at > timezone.now():
             raise ValidationError('미래 시점의 측정 시간은 입력할 수 없습니다.')
         
         # 중복 측정 방지 (같은 CCP, 같은 시간대)
-        time_threshold = measured_at - timedelta(minutes=1)
+        time_threshold = measured_at - timedelta(minutes=DUPLICATE_MEASUREMENT_THRESHOLD_MINUTES)
         existing_log = CCPLog.objects.filter(
             ccp=ccp,
             measured_at__gte=time_threshold,
-            measured_at__lte=measured_at + timedelta(minutes=1)
+            measured_at__lte=measured_at + timedelta(minutes=DUPLICATE_MEASUREMENT_THRESHOLD_MINUTES)
         ).exists()
         
         if existing_log:
             raise ValidationError('동일 시간대에 이미 측정 기록이 존재합니다.')
+            
+        return ccp
 
     def calculate_compliance_score(self, production_order=None, ccp=None, date_from=None, date_to=None):
         """
@@ -85,7 +103,7 @@ class HaccpService:
             'verification_rate': round(verification_rate, 2)
         }
 
-    def get_critical_alerts(self, user=None, hours=24):
+    def get_critical_alerts(self, user=None, hours=CRITICAL_ALERT_HOURS):
         """
         중요 알림 목록 조회
         - 기준 이탈 미조치 항목
@@ -114,10 +132,10 @@ class HaccpService:
                 'log_id': str(log.id)
             })
         
-        # 2. 검증 대기 항목 (72시간 경과)
+        # 2. 검증 대기 항목 (설정 시간 경과)
         pending_verification = CCPLog.objects.filter(
             verified_by__isnull=True,
-            measured_at__lte=timezone.now() - timedelta(hours=72)
+            measured_at__lte=timezone.now() - timedelta(hours=VERIFICATION_REQUIRED_HOURS)
         ).select_related('ccp')
         
         for log in pending_verification:
@@ -130,9 +148,9 @@ class HaccpService:
                 'log_id': str(log.id)
             })
         
-        # 3. 연속 이탈 패턴 감지 (같은 CCP에서 3회 연속)
+        # 3. 연속 이탈 패턴 감지 (같은 CCP에서 설정 횟수 연속)
         recent_logs = CCPLog.objects.filter(
-            measured_at__gte=timezone.now() - timedelta(hours=12)
+            measured_at__gte=timezone.now() - timedelta(hours=CONSECUTIVE_VIOLATION_DETECTION_HOURS)
         ).order_by('ccp', '-measured_at')
         
         ccp_consecutive_count = {}
@@ -147,7 +165,7 @@ class HaccpService:
                 ccp_consecutive_count[ccp_id]['count'] = 0
         
         for ccp_id, data in ccp_consecutive_count.items():
-            if data['count'] >= 3:
+            if data['count'] >= CONSECUTIVE_VIOLATION_THRESHOLD:
                 alerts.append({
                     'type': 'consecutive_deviation',
                     'severity': 'critical',

@@ -1,5 +1,7 @@
 import React, { useContext, useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import Header from '../components/layout/Header';
 import apiClient from '../services/apiClient';
 import { toast } from 'react-hot-toast';
 
@@ -16,9 +18,9 @@ const DashboardPage = () => {
       try {
         // 여러 API를 병렬로 호출
         const [statsRes, ccpLogsRes, prodOrdersRes] = await Promise.all([
-          apiClient.get('/api/statistics/'),
-          apiClient.get('/api/ccp-logs/?limit=5'), // 최근 5개만
-          apiClient.get('/api/production-orders/?status=in_progress'),
+          apiClient.get('/statistics/'),
+          apiClient.get('/ccp-logs/?limit=5'), // 최근 5개만
+          apiClient.get('/production-orders/?status=in_progress'),
         ]);
 
         setStats(statsRes.data);
@@ -58,7 +60,8 @@ const DashboardPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-100">
+      <Header />
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {/* 헤더 */}
         <div className="px-4 py-6 sm:px-0">
@@ -100,9 +103,9 @@ const DashboardPage = () => {
               </div>
               <div className="bg-gray-50 px-5 py-3">
                 <div className="text-sm">
-                  <button className="font-medium text-blue-600 hover:text-blue-500">
+                  <Link to="/ccp-logs" className="font-medium text-blue-600 hover:text-blue-500">
                     CCP 로그 보기
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -183,10 +186,10 @@ const DashboardPage = () => {
                           <li key={log.id} className="py-5">
                             <div className="relative focus-within:ring-2 focus-within:ring-indigo-500">
                               <h3 className="text-sm font-semibold text-gray-800">
-                                {log.ccp.name} - {log.measure_value}{log.ccp.unit}
+                                {log.ccp.name} - {log.measured_value}{log.unit}
                               </h3>
-                              <p className={`mt-1 text-sm ${log.is_compliant ? 'text-green-600' : 'text-red-600'}`}>
-                                {log.is_compliant ? '정상' : '이탈'} (기준: {log.ccp.upper_limit})
+                              <p className={`mt-1 text-sm ${log.is_within_limits ? 'text-green-600' : 'text-red-600'}`}>
+                                {log.is_within_limits ? '정상' : '이탈'} - {log.status}
                               </p>
                               <p className="mt-1 text-xs text-gray-500">
                                 {new Date(log.created_at).toLocaleString()}

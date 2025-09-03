@@ -112,4 +112,40 @@
 ### 환경 설정 베스트 프랙티스
 - .env.example 템플릿 제공
 - SECRET_KEY는 절대 하드코딩 금지
+
+## 2025-09-03: CCP 로그 관리 기능 + 아키텍처 개선 완료
+
+### 🎯 구현 내용
+- **프론트엔드 CCP 로그 기능**: CCPLogForm, CCPLogList, CCPLogsPage 완성
+- **네비게이션 시스템**: Header 컴포넌트와 라우팅 구조 완비
+- **아키텍처 개선**: 레이어별 책임 분리, 중복 코드 제거
+- **상수 관리**: constants.py 도입으로 하드코딩 제거
+
+### 🔧 주요 기술적 해결사항
+- **API 경로 문제**: .env 파일에서 REACT_APP_API_URL 설정 누락으로 404 에러 → `/api` 접두사 추가로 해결
+- **데이터 무결성 오류**: CCPLog 생성 시 is_within_limits 필드 null 에러 → Model의 save() 메서드에서 자동 계산으로 해결
+- **중복 로직 제거**: CCP 한계 기준 체크가 Model, Serializer, View에 중복 → Model Layer에만 남기고 나머지 제거
+
+### 📂 생성된 파일들
+**Backend:**
+- `core/constants.py`: 시스템 상수 정의
+
+**Frontend:**
+- `src/components/forms/CCPLogForm.js`: CCP 로그 입력 폼
+- `src/components/lists/CCPLogList.js`: CCP 로그 목록 및 필터링
+- `src/components/layout/Header.js`: 네비게이션 헤더
+- `src/pages/CCPLogsPage.js`: CCP 로그 관리 메인 페이지
+- `src/services/ccpService.js`: CCP 관련 API 서비스
+
+### 🎓 학습 내용
+- **레이어별 책임 분리**: 각 레이어가 명확한 역할을 가져야 성능과 유지보수성이 향상됨
+- **환경 변수 중요성**: API 경로 설정 실수로 전체 기능이 동작하지 않을 수 있음
+- **Django Model의 save() 메서드**: 비즈니스 로직을 Model에서 처리하면 데이터 일관성 보장
+
+### ✅ 테스트 결과
+- CCP 로그 입력/조회 기능 정상 작동
+- 한계 기준 이탈 시 자동 상태 계산 정상
+- 대시보드 API 데이터 일관성 확보
+
+**상태**: feature/ccp-log-management 브랜치에서 작업 완료, PR 준비 중
 - docker-compose.yml 최신 문법 (version 필드 제거)

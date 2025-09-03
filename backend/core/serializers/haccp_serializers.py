@@ -180,31 +180,20 @@ class CCPLogCreateSerializer(serializers.ModelSerializer):
         return value
     
     def validate(self, attrs):
+        # 기본적인 데이터 유효성만 검증 (비즈니스 로직은 Service Layer에서 처리)
         measured_at = attrs.get('measured_at')
         
-        # 미래 시간 체크
+        # 기본 시간 검증
         if measured_at and measured_at > timezone.now():
             raise serializers.ValidationError({
                 'measured_at': '측정 시간은 현재 시간보다 늦을 수 없습니다.'
             })
-            
-        # CCP 존재 확인
-        ccp_id = attrs.get('ccp_id')
-        if ccp_id:
-            try:
-                ccp = CCP.objects.get(id=ccp_id, is_active=True)
-                attrs['ccp_instance'] = ccp  # 나중에 사용하기 위해 저장
-            except CCP.DoesNotExist:
-                raise serializers.ValidationError({
-                    'ccp_id': '존재하지 않거나 비활성화된 CCP입니다.'
-                })
                 
         return attrs
     
     def create(self, validated_data):
         ccp_id = validated_data.pop('ccp_id')
         production_order_id = validated_data.pop('production_order_id', None)
-        ccp_instance = validated_data.pop('ccp_instance', None)
         
         validated_data['ccp_id'] = ccp_id
         if production_order_id:
@@ -214,7 +203,7 @@ class CCPLogCreateSerializer(serializers.ModelSerializer):
         if request and hasattr(request, 'user'):
             validated_data['created_by'] = request.user
             
-        # CCP 모델의 save() 메서드가 자동으로 is_within_limits, status 설정
+        # 한계 기준 체크는 Model의 save() 메서드에서 자동 처리됨
         return super().create(validated_data)
 
 

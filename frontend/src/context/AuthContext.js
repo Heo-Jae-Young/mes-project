@@ -23,12 +23,12 @@ export const AuthProvider = ({ children }) => {
         const currentUser = authService.getCurrentUser();
         setUser(currentUser);
 
-        // 토큰 유효성 검증
-        const isValid = await authService.verifyToken();
-        if (!isValid) {
-          // 토큰이 만료된 경우 로그아웃
-          handleLogout();
-        }
+        // 토큰 유효성 검증 (임시 비활성화)
+        // const isValid = await authService.verifyToken();
+        // if (!isValid) {
+        //   // 토큰이 만료된 경우 로그아웃
+        //   handleLogout();
+        // }
       }
       setLoading(false);
     };
