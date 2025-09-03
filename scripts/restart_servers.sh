@@ -2,6 +2,13 @@
 
 echo "-- 서버 재시작 스크립트 시작 --"
 
+# 프로젝트 루트 디렉토리 찾기
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+cd "$PROJECT_ROOT"
+
+echo "프로젝트 루트: $PROJECT_ROOT"
+
 # 백엔드 서버 종료 (포트 8000)
 echo "백엔드 서버 (포트 8000) 종료 시도..."
 PID_BACKEND=$(lsof -t -i :8000)
@@ -28,14 +35,14 @@ echo "-- 서버 재시작 시작 --"
 
 # 백엔드 서버 시작
 echo "백엔드 서버 시작 중..."
-cd ../backend && source venv/bin/activate && python manage.py runserver &
+cd "$PROJECT_ROOT/backend" && source venv/bin/activate && python manage.py runserver &
 BACKEND_PID=$!
 echo "백엔드 서버 시작 완료 (PID: $BACKEND_PID)"
 sleep 3 # 서버 시작 대기
 
 # 프론트엔드 서버 시작
 echo "프론트엔드 서버 시작 중..."
-cd ../frontend && npm start &
+cd "$PROJECT_ROOT/frontend" && npm start &
 FRONTEND_PID=$!
 echo "프론트엔드 서버 시작 완료 (PID: $FRONTEND_PID)"
 sleep 3 # 서버 시작 대기

@@ -177,22 +177,22 @@ class CCPLogViewSet(viewsets.ModelViewSet):
         return queryset
     
     def perform_create(self, serializer):
-        """CCP 로그 생성 시 Service를 통한 검증"""
+        """CCP 로그 생성 - 비즈니스 로직은 Service Layer에서 처리"""
         validated_data = serializer.validated_data
-        ccp = validated_data['ccp']
+        ccp_id = validated_data['ccp_id']
         measured_value = validated_data['measured_value']
         measured_at = validated_data['measured_at']
         
-        # Service를 통한 검증
-        self.haccp_service.validate_ccp_log_creation(
-            ccp=ccp,
+        # Service를 통한 비즈니스 로직 검증 (CCP 조회 포함)
+        ccp = self.haccp_service.validate_ccp_log_creation(
+            ccp_id=ccp_id,
             measured_value=measured_value,
             measured_at=measured_at,
             created_by=self.request.user
         )
         
-        # 검증 통과 시 생성
-        serializer.save(created_by=self.request.user)
+        # 검증 통과 시 생성 (created_by는 serializer에서 설정됨)
+        serializer.save()
     
     def perform_destroy(self, instance):
         """CCP 로그는 삭제 불가 (HACCP 규정 준수)"""

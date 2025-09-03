@@ -96,8 +96,8 @@ npm install
 ## Current Project Status
 
 ### 📊 Overall Progress
-- **백엔드**: 98% (완료 - API, Service Layer, Tests)
-- **프론트엔드**: 40% (기본 구조 + 로그인 + 대시보드)
+- **백엔드**: 99% (완료 - API, Service Layer, Tests, 아키텍처 개선)
+- **프론트엔드**: 60% (기본 구조 + 로그인 + 대시보드 + CCP 로그 관리)
 - **배포**: 0% (미구현)
 
 ### ✅ Completed Features
@@ -111,23 +111,35 @@ npm install
 - 대시보드 통계 API (`/api/statistics/`)
 - HACCP 중요 알림 API (`/api/ccps/critical_alerts/`) 정상 작동
 - 체계적인 테스트 아키텍처 (25개 단위 테스트 통과)
+- **🆕 레이어별 책임 분리 개선**: 중복 코드 제거, 올바른 아키텍처 적용
+- **🆕 상수 관리**: 하드코딩된 값들을 `constants.py`로 분리
 
-**Frontend Infrastructure**
+**Frontend Infrastructure**  
 - React 18+ 프로젝트 구조
 - 로그인/로그아웃 기능 (JWT 인증)
 - Context API 기반 전역 상태 관리
 - 대시보드 페이지 (동적 데이터 연동)
 - Axios 기반 API 클라이언트
+- **🆕 CCP 로그 관리 기능**: 입력 폼, 목록 조회, 필터링, 페이지네이션
+- **🆕 네비게이션 시스템**: Header 메뉴와 라우팅 구조 완성
 
 ### ⚠️ Known Issues
-- 없음 (모든 핵심 API 정상 작동)
+- 없음 (모든 핵심 API 정상 작동, 아키텍처 개선 완료)
 
 ### 🎯 Next Steps
 
-**단기 목표 (현재 작업)**
-1. **CCP 로그 입력 폼**: 작업자가 중요관리점 데이터를 입력할 수 있는 UI
-2. **생산 오더 관리**: 생산 시작/완료 처리 기능
-3. **HACCP 컴플라이언스 리포트**: 상세 분석 및 시각화
+**단기 목표 (우선순위)**
+1. **생산 오더 관리**: 생산 시작/완료 처리 기능
+   - 생산 오더 상태 관리 (planned → in_progress → completed)
+   - 생산 진행률 추적 및 업데이트 API
+   - 프론트엔드 생산 관리 페이지 구현
+2. **HACCP 컴플라이언스 리포트**: 상세 분석 및 시각화
+   - CCP별 규정 준수율 대시보드
+   - 시간대별 트렌드 차트 구현
+   - PDF 리포트 생성 기능
+3. **실시간 알림 개선**: WebSocket 기반 실시간 알림
+   - Django Channels 설정
+   - 중요 이탈 발생 시 즉시 알림
 
 **중기 목표**
 1. **실시간 알림 시스템**: 중요 이탈 발생 시 즉시 알림
@@ -162,22 +174,42 @@ DATABASE_PORT=3306
 
 ## 📚 Documentation
 
-### Backend Documentation
-- `backend/docs/backend_data_flow.md`: HTTP 요청부터 데이터베이스까지의 전체 데이터 흐름
-- `backend/docs/mermaid_syntax_guide.md`: Mermaid 다이어그램 작성 가이드
-- `backend/docs/API_ROUTING.md`: Django DRF 라우팅 시스템 해설
+### 🏗️ Project & Architecture (프로젝트 및 아키텍처)
+**📖 언제 보나요?** 프로젝트 전체 구조를 이해하거나, 새로운 아키텍처 패턴을 도입할 때  
+**✍️ 언제 기록하나요?** 주요 설계 결정, 기술 스택 변경, 아키텍처 패턴 도입 시
+
+- `docs/PROJECT_ARCHITECTURE.md`: 전체 프로젝트 구조 및 모노레포 가이드
+- `docs/ARCHITECTURE_PATTERNS.md`: 코드 아키텍처 패턴 및 설계 원칙  
+- `docs/TECH_STACK_DECISIONS.md`: 기술 스택 선택 근거 및 의사결정 과정
+
+### 🔧 Technical Implementation (기술 구현)
+**📖 언제 보나요?** 새로운 기능 구현하거나, 기존 코드 수정할 때  
+**✍️ 언제 기록하나요?** 복잡한 구현 패턴, 데이터 플로우, API 설계 완료 시
+
+- `docs/SYSTEM_DATA_FLOW.md`: 백엔드/프론트엔드 전체 데이터 플로우 및 Mermaid 문법 가이드
 - `backend/docs/SERVICE_LAYER.md`: Service Layer 패턴과 비즈니스 로직 구조
+- `backend/docs/API_ROUTING.md`: Django DRF 라우팅 시스템 해설
 - `backend/docs/TESTING_GUIDE.md`: 테스트 아키텍처 및 실행 가이드
 
-### Frontend Documentation
-- `frontend/docs/frontend_data_flow.md`: 프론트엔드 데이터 요청 및 화면 표시 과정
+### 🛠️ Setup & Operations (설정 및 운영)  
+**📖 언제 보나요?** 개발 환경 구축하거나, 서버 관리할 때  
+**✍️ 언제 기록하나요?** 환경 설정 방법 변경, 새로운 운영 스크립트 추가 시
 
-### General Documentation
 - `docs/DATABASE_SETUP.md`: 데이터베이스 초기 설정부터 운영까지 완전 가이드
 - `docs/SERVER_SCRIPTS.md`: 서버 관리 자동화 스크립트 상세 가이드
+
+### 📝 Development Guide (개발 가이드)
+**📖 언제 보나요?** 개발 프로세스 확인하거나, 과거 작업 내용 참고할 때  
+**✍️ 언제 기록하나요?** 주요 기능 완성, 새로운 개발 노하우 습득, 베스트 프랙티스 발견 시
+
 - `docs/DEVELOPMENT_LOG.md`: 개발 이력 및 주요 학습 내용
-- `docs/ARCHITECTURE_PATTERNS.md`: 코드 아키텍처 패턴 및 설계 원칙
 - `docs/DEVELOPMENT_BEST_PRACTICES.md`: 개발 노하우 및 베스트 프랙티스
+
+### 🐛 Problem Solving (문제 해결)
+**📖 언제 보나요?** 비슷한 에러나 문제 상황에 직면했을 때  
+**✍️ 언제 기록하나요?** 해결하기 어려웠던 버그, 환경 이슈, 호환성 문제 해결 후
+
+- `docs/TAILWINDCSS_TROUBLESHOOTING.md`: TailwindCSS 버전 호환성 이슈 해결 기록
 
 ## Development Best Practices
 

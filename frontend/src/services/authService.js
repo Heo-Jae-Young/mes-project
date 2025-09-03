@@ -4,7 +4,7 @@ class AuthService {
   // 로그인
   async login(credentials) {
     try {
-      const response = await apiClient.post('/api/token/', credentials);
+      const response = await apiClient.post('/token/', credentials);
       const { access, refresh } = response.data;
       
       // 토큰을 로컬스토리지에 저장
@@ -12,7 +12,7 @@ class AuthService {
       localStorage.setItem('refreshToken', refresh);
       
       // 사용자 정보 조회 및 저장
-      const userResponse = await apiClient.get('/api/users/me/');
+      const userResponse = await apiClient.get('/users/me/');
       const user = userResponse.data;
       localStorage.setItem('user', JSON.stringify(user));
       
@@ -51,7 +51,7 @@ class AuthService {
       const accessToken = localStorage.getItem('accessToken');
       if (!accessToken) return false;
       
-      await apiClient.post('/api/token/verify/', { token: accessToken });
+      await apiClient.post('/token/verify/', { token: accessToken });
       return true;
     } catch (error) {
       return false;

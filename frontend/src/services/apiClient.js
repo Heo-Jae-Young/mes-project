@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // API 클라이언트 생성
 const apiClient = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8000',
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8000/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -39,7 +39,7 @@ apiClient.interceptors.response.use(
         const refreshToken = localStorage.getItem('refreshToken');
         if (refreshToken) {
           const response = await axios.post(
-            `${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/token/refresh/`,
+            `${process.env.REACT_APP_API_URL || 'http://localhost:8000/api'}/token/refresh/`,
             { refresh: refreshToken }
           );
 

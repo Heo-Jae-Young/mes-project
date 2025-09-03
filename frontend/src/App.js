@@ -6,6 +6,7 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import Header from './components/layout/Header';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import CCPLogsPage from './pages/CCPLogsPage';
 
 function App() {
   return (
@@ -21,10 +22,13 @@ function App() {
             {/* 보호된 라우트들 */}
             <Route path="/dashboard" element={
               <ProtectedRoute>
-                <div>
-                  <Header />
-                  <DashboardPage />
-                </div>
+                <DashboardPage />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/ccp-logs" element={
+              <ProtectedRoute>
+                <CCPLogsPage />
               </ProtectedRoute>
             } />
             
