@@ -6,7 +6,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Sum, Count, Q
 from datetime import datetime, timedelta, date
 from core.models import RawMaterial, MaterialLot
-from core.serializers import RawMaterialSerializer, MaterialLotSerializer, MaterialLotCreateSerializer
+from core.serializers import RawMaterialSerializer, RawMaterialCreateSerializer, MaterialLotSerializer, MaterialLotCreateSerializer
 
 
 class RawMaterialViewSet(viewsets.ModelViewSet):
@@ -21,6 +21,8 @@ class RawMaterialViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
     
     def get_serializer_class(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            return RawMaterialCreateSerializer
         return RawMaterialSerializer
     
     def get_queryset(self):
@@ -163,11 +165,39 @@ class MaterialLotViewSet(viewsets.ModelViewSet):
         
         return queryset
     
+    def destroy(self, request, *args, **kwargs):
+        """로트 삭제 - 조건부 허용"""
+        lot = self.get_object()
+        
+        # 삭제 조건 검증
+        if lot.status in ['in_use', 'used']:
+            return Response(
+                {'detail': '이미 사용된 로트는 삭제할 수 없습니다.'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if lot.quantity_current != lot.quantity_received:
+            return Response(
+                {'detail': '일부 소비된 로트는 삭제할 수 없습니다.'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # 권한 검증 (관리자 또는 품질관리자만)
+        if request.user.role not in ['admin', 'quality_manager']:
+            return Response(
+                {'detail': '로트 삭제 권한이 없습니다.'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        return super().destroy(request, *args, **kwargs)
+    
     @action(detail=True, methods=['post'])
     def consume(self, request, pk=None):
         """로트 소비/사용"""
+        from decimal import Decimal
+        
         lot = self.get_object()
-        consume_quantity = float(request.data.get('quantity', 0))
+        consume_quantity = Decimal(str(request.data.get('quantity', 0)))
         
         if consume_quantity <= 0:
             return Response(
@@ -181,7 +211,7 @@ class MaterialLotViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # 수량 차감
+        # 수량 차감 (Decimal 타입으로 처리)
         lot.quantity_current -= consume_quantity
         
         # 상태 업데이트

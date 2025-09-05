@@ -2,6 +2,8 @@ import React, { useContext, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import Header from '../components/layout/Header';
+import InventorySummary from '../components/inventory/InventorySummary';
+import InventoryAlerts from '../components/inventory/InventoryAlerts';
 import apiClient from '../services/apiClient';
 import { toast } from 'react-hot-toast';
 
@@ -79,7 +81,19 @@ const DashboardPage = () => {
 
         {/* 메인 컨텐츠 */}
         <div className="px-4 py-6 sm:px-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* 재고 현황 요약 */}
+          <InventorySummary />
+          
+          {/* 재고 알림 */}
+          <div className="mb-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">재고 알림</h2>
+            <InventoryAlerts />
+          </div>
+
+          {/* 시스템 현황 카드들 */}
+          <div className="mb-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">시스템 현황</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* CCP 모니터링 카드 */}
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-5">
@@ -133,9 +147,9 @@ const DashboardPage = () => {
               </div>
               <div className="bg-gray-50 px-5 py-3">
                 <div className="text-sm">
-                  <button className="font-medium text-green-600 hover:text-green-500">
+                  <Link to="/production" className="font-medium text-green-600 hover:text-green-500">
                     생산 주문 보기
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -169,6 +183,7 @@ const DashboardPage = () => {
                 </div>
               </div>
             </div>
+          </div>
           </div>
 
           {/* 최근 활동 */}
