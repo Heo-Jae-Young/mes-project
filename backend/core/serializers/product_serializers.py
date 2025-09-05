@@ -57,22 +57,18 @@ class FinishedProductCreateSerializer(serializers.ModelSerializer):
         return attrs
     
     def validate_nutrition_facts(self, value):
-        """영양성분표 JSON 형식 검증"""
-        if value is not None:
-            required_keys = ['calories', 'protein', 'fat', 'carbohydrates', 'sodium']
+        """영양성분표 JSON 형식 검증 (선택사항)"""
+        if value is not None and value != {}:
             if not isinstance(value, dict):
                 raise serializers.ValidationError("영양성분표는 JSON 객체 형태여야 합니다.")
-            
-            missing_keys = [key for key in required_keys if key not in value]
-            if missing_keys:
-                raise serializers.ValidationError(
-                    f"필수 영양성분 정보가 누락되었습니다: {', '.join(missing_keys)}"
-                )
                 
-            # 숫자값 검증
+            # 숫자값 검증 (입력된 값만)
             for key, val in value.items():
-                if key in required_keys and not isinstance(val, (int, float)):
-                    raise serializers.ValidationError(f"{key}는 숫자값이어야 합니다.")
+                if val is not None and val != '' and not isinstance(val, (int, float)):
+                    try:
+                        float(val)
+                    except (ValueError, TypeError):
+                        raise serializers.ValidationError(f"{key}는 숫자값이어야 합니다.")
                     
         return value
     
@@ -89,7 +85,7 @@ class FinishedProductUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = FinishedProduct
         fields = [
-            'name', 'description', 'version', 'shelf_life_days',
+            'name', 'code', 'description', 'version', 'shelf_life_days',
             'storage_temp_min', 'storage_temp_max', 'net_weight', 'packaging_type',
             'allergen_info', 'nutrition_facts', 'is_active'
         ]
@@ -124,21 +120,17 @@ class FinishedProductUpdateSerializer(serializers.ModelSerializer):
         return attrs
     
     def validate_nutrition_facts(self, value):
-        """영양성분표 JSON 형식 검증"""
-        if value is not None:
-            required_keys = ['calories', 'protein', 'fat', 'carbohydrates', 'sodium']
+        """영양성분표 JSON 형식 검증 (선택사항)"""
+        if value is not None and value != {}:
             if not isinstance(value, dict):
                 raise serializers.ValidationError("영양성분표는 JSON 객체 형태여야 합니다.")
-            
-            missing_keys = [key for key in required_keys if key not in value]
-            if missing_keys:
-                raise serializers.ValidationError(
-                    f"필수 영양성분 정보가 누락되었습니다: {', '.join(missing_keys)}"
-                )
                 
-            # 숫자값 검증
+            # 숫자값 검증 (입력된 값만)
             for key, val in value.items():
-                if key in required_keys and not isinstance(val, (int, float)):
-                    raise serializers.ValidationError(f"{key}는 숫자값이어야 합니다.")
+                if val is not None and val != '' and not isinstance(val, (int, float)):
+                    try:
+                        float(val)
+                    except (ValueError, TypeError):
+                        raise serializers.ValidationError(f"{key}는 숫자값이어야 합니다.")
                     
         return value
