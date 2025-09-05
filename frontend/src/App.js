@@ -7,6 +7,8 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import CCPLogsPage from './pages/CCPLogsPage';
 import ProductionPage from './pages/ProductionPage';
+import MaterialsPage from './pages/MaterialsPage';
+import MaterialDetailPage from './pages/MaterialDetailPage';
 
 function App() {
   return (
@@ -35,6 +37,18 @@ function App() {
             <Route path="/production" element={
               <ProtectedRoute>
                 <ProductionPage />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/materials" element={
+              <ProtectedRoute>
+                <MaterialsPage />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/materials/:id" element={
+              <ProtectedRoute>
+                <MaterialDetailPage />
               </ProtectedRoute>
             } />
             

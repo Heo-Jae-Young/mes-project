@@ -159,6 +159,48 @@ GET /api/statistics/
 4. **Model**: 여러 모델에서 데이터 조회 및 집계
 5. **응답**: 계산된 통계 데이터 JSON 반환
 
+#### 예시 3: 원자재 목록 조회 (재고 정보 포함)
+
+```
+GET /api/raw-materials/?category=ingredient&is_active=true
+```
+
+**처리 흐름:**
+1. **URL 라우팅**: `/api/raw-materials/` → `RawMaterialViewSet.list()`
+2. **View**: 필터 파라미터 처리 및 Serializer 선택
+3. **Serializer**: `RawMaterialSerializer.get_inventory_info()` 메소드 실행
+4. **ORM 최적화**: 
+   ```python
+   # 단일 쿼리로 재고 정보 집계
+   active_lots = obj.lots.filter(
+       status__in=['received', 'in_storage', 'in_use'],
+       quantity_current__gt=0
+   )
+   total_quantity = active_lots.aggregate(total=Sum('quantity_current'))['total']
+   ```
+5. **응답**: 원자재 정보 + 재고 집계 데이터 JSON 반환
+
+#### 예시 4: 로트 소비 처리
+
+```
+POST /api/material-lots/{lot_id}/consume/
+{
+  "quantity": "50.5"
+}
+```
+
+**처리 흐름:**
+1. **URL 라우팅**: `/api/material-lots/{id}/consume/` → `MaterialLotViewSet.consume()`
+2. **View**: 커스텀 액션 메소드 실행
+3. **타입 안전성 보장**:
+   ```python
+   from decimal import Decimal
+   consume_quantity = Decimal(str(request.data.get('quantity', 0)))
+   ```
+4. **비즈니스 규칙 검증**: 수량 초과 확인, 상태 유효성 체크
+5. **Model**: 수량 차감 및 상태 업데이트
+6. **응답**: 업데이트된 로트 정보 반환
+
 ---
 
 ## 2. 프론트엔드 데이터 플로우
@@ -438,7 +480,66 @@ const ProductionPage = () => {
 };
 ```
 
-#### 예시 5: 인증이 필요한 API 호출
+#### 예시 5: 원자재 관리 - 재고 집계 최적화 패턴
+
+```javascript
+// ❌ 비효율적인 방법: 프론트엔드에서 집계
+// MaterialsPage.js (이전 버전)
+const loadInventoryData = async (materialsList) => {
+  // 1. 모든 로트 데이터를 가져옴 (N+1 쿼리 문제)
+  const lotsResponse = await materialService.getAllMaterialLots();
+  
+  // 2. 프론트엔드에서 집계 처리 (성능 저하)
+  materialsList.forEach(material => {
+    const materialLots = allLots.filter(lot => lot.raw_material === material.id);
+    const totalQuantity = materialLots.reduce((sum, lot) => sum + lot.quantity_current, 0);
+    // ... 복잡한 집계 로직
+  });
+};
+
+// ✅ 최적화된 방법: 백엔드에서 집계
+// MaterialsPage.js (최적화 버전)
+const fetchMaterials = async () => {
+  // 1. 원자재 목록과 재고 정보를 한번에 가져옴
+  const data = await materialService.getMaterials(filters);
+  const materialsList = data.results || data;
+  
+  // 2. 백엔드에서 미리 계산된 재고 정보 사용
+  const inventorySummary = {};
+  materialsList.forEach(material => {
+    if (material.inventory_info) {
+      inventorySummary[material.id] = material.inventory_info;
+    }
+  });
+  
+  // 백엔드 RawMaterialSerializer.get_inventory_info()에서
+  // Django ORM aggregate()로 DB 레벨 집계 처리됨
+};
+```
+
+#### 예시 6: 로트 소비 처리 - Decimal 타입 안전성
+
+```javascript
+// MaterialDetailPage.js에서 로트 소비
+const handleConsumeLot = async (lotId, quantity) => {
+  try {
+    // 1. 프론트엔드에서 입력값 전송
+    await materialService.consumeMaterialLot(lotId, { quantity });
+    
+    // 2. 백엔드에서 Decimal 타입 변환 처리
+    // MaterialLotViewSet.consume()에서 자동으로
+    // Decimal(str(request.data.get('quantity', 0))) 변환
+    
+    toast.success('로트 소비 처리가 완료되었습니다.');
+    loadLots(); // 3. 목록 새로고침
+  } catch (error) {
+    // 4. 비즈니스 규칙 위반 시 에러 처리
+    toast.error(error.response?.data?.detail || '소비 처리에 실패했습니다.');
+  }
+};
+```
+
+#### 예시 7: 인증이 필요한 API 호출
 
 ```javascript
 // services/authService.js에서 토큰 관리

@@ -181,13 +181,14 @@ class ProductionService:
         }
 
     def _get_available_material_quantity(self, material_code):
-        """지정된 원자재 코드의 가용 수량 조회"""
+        """지정된 원자재 코드의 가용 수량 조회 (품질검사 합격품만)"""
         try:
             material = RawMaterial.objects.get(code=material_code)
             available_lots = MaterialLot.objects.filter(
                 raw_material=material,
                 status='in_storage',
-                quantity_current__gt=0
+                quantity_current__gt=0,
+                quality_test_passed=True  # 품질검사 합격한 것만
             )
             return available_lots.aggregate(
                 total=Sum('quantity_current')
@@ -204,7 +205,8 @@ class ProductionService:
             available_lots = MaterialLot.objects.filter(
                 raw_material=material,
                 status='in_storage',
-                quantity_current__gt=0
+                quantity_current__gt=0,
+                quality_test_passed=True  # 품질검사 합격한 것만
             ).order_by('received_date')  # FIFO
             
             remaining_qty = required_qty
