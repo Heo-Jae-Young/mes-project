@@ -15,9 +15,11 @@ HACCP 기반 식품 안전 규정 준수를 위한 제조 실행 시스템(MES) 
 - 🗃️ **완전한 데이터 모델링** - User, CCP, CCPLog, ProductionOrder 등 8개 도메인 모델
 - ⚙️ **Service Layer 아키텍처** - 비즈니스 로직 분리, 테스트 가능한 구조
 - 🏭 **생산 오더 관리 시스템** - 생산 주문 생성/상태 관리/FIFO 원자재 할당/완료 처리
+- 📦 **원자재 관리 시스템** - 원자재 입고/재고/유통기한 관리 기능
+- 🍔 **제품 관리 시스템** - 완제품 정보 관리, 영양성분/알러지 정보, 버전 제어
 
 **🚧 개발 중 (다음 우선순위)**
-- 📦 **원자재 관리 시스템** - 원자재 입고/재고/유통기한 관리 기능
+- 🔧 **BOM(Bill of Materials) 시스템** - 제품별 원자재 소요량 정의 및 자동 계산
 - 📈 **HACCP 컴플라이언스 리포트** - 상세 분석 및 시각화
 - 🚨 **실시간 알림 시스템** - WebSocket 기반 중요 이탈 즉시 알림
 
@@ -117,6 +119,13 @@ cd ../frontend && npm start
 - **실시간 제어**: 생산 시작/완료/일시정지/재개 버튼식 제어
 - **진행률 추적**: 계획 대비 실제 생산량 시각화
 
+### 🍔 제품 관리
+- **제품 카탈로그**: 완제품 생성/조회/수정/삭제 (CRUD)
+- **상세 정보 관리**: 기본정보, 사양, 영양성분, 알러지 정보
+- **품질 정보**: 보관온도 범위, 유통기한, 포장형태, 중량
+- **버전 관리**: 제품 버전별 이력 관리 및 활성화 상태 제어
+- **일관성 있는 UI**: 기존 페이지와 동일한 디자인 패턴 적용
+
 ## 📖 문서
 
 ### 📋 주요 문서 (5개 카테고리)
@@ -154,15 +163,17 @@ mes-project/
 │   │   ├── views/           # API ViewSets
 │   │   └── tests/           # 25개 단위 테스트
 │   └── docs/                # 백엔드 기술 문서
-├── frontend/                # React 프론트엔드 (80% 완료)
+├── frontend/                # React 프론트엔드 (95% 완료)
 │   ├── src/
 │   │   ├── components/      # 재사용 UI 컴포넌트
 │   │   │   ├── forms/       # 폼 컴포넌트 (CCPLogForm, ProductionOrderForm)
 │   │   │   ├── lists/       # 목록 컴포넌트 (CCPLogList, ProductionOrderList)
 │   │   │   ├── layout/      # 레이아웃 컴포넌트 (Header)
-│   │   │   └── production/  # 생산 관리 컴포넌트 (ProductionControls)
-│   │   ├── pages/           # 페이지별 컴포넌트 (Login, Dashboard, CCPLogs, ProductionPage)
-│   │   ├── services/        # API 서비스 레이어 (authService, ccpService, productionService)
+│   │   │   ├── production/  # 생산 관리 컴포넌트 (ProductionControls)
+│   │   │   ├── materials/   # 원자재 관리 컴포넌트 (MaterialForm, MaterialList)
+│   │   │   └── products/    # 제품 관리 컴포넌트 (ProductForm, ProductList)
+│   │   ├── pages/           # 페이지별 컴포넌트 (Login, Dashboard, CCPLogs, ProductionPage, ProductsPage, MaterialsPage)
+│   │   ├── services/        # API 서비스 레이어 (authService, ccpService, productionService, productService, materialService)
 │   │   ├── utils/           # 유틸리티 (dateFormatter)
 │   │   └── context/         # 전역 상태 관리 (AuthContext)
 │   └── docs/                # 프론트엔드 기술 문서
@@ -175,7 +186,7 @@ mes-project/
 
 ## 🏗 개발 진행률
 
-### ✅ Backend (90% 완료)
+### ✅ Backend (95% 완료)
 - [x] Django 5.2.5 + DRF 환경 구성
 - [x] MariaDB Docker 연동 및 설정
 - [x] JWT 인증 시스템 (토큰 생성/갱신/검증)
@@ -185,12 +196,14 @@ mes-project/
 - [x] 대시보드 통계 API (`/api/statistics/`)
 - [x] HACCP 중요 알림 API (`/api/ccps/critical_alerts/`)
 - [x] **생산 관리 Service Layer**: FIFO 원자재 할당, Decimal 정밀 연산
+- [x] **원자재 관리 API**: 입고/재고/유통기한 관리 시스템
+- [x] **제품 관리 API**: 완제품 CRUD, 영양성분/알러지 정보 관리
 - [x] 25개 단위 테스트 작성 및 통과
 - [x] API 문서화 (Swagger UI)
 - [x] 아키텍처 개선: 레이어별 책임 분리, 중복 코드 제거
-- [ ] 원자재 관리 API (입고/재고/유통기한 관리)
+- [ ] BOM(Bill of Materials) API 구현
 
-### ✅ Frontend (80% 완료)
+### ✅ Frontend (95% 완료)
 - [x] React 18+ 프로젝트 구조
 - [x] JWT 기반 로그인/로그아웃 (자동 토큰 갱신)
 - [x] Context API 기반 전역 상태 관리
@@ -199,9 +212,12 @@ mes-project/
 - [x] CCP 로그 관리 시스템: 입력 폼, 목록 조회, 페이지네이션
 - [x] 네비게이션 시스템: Header 메뉴 및 라우팅 구조
 - [x] **생산 오더 관리 UI**: 생성 폼, 목록, 상태별 제어 버튼, 진행률 시각화
+- [x] **원자재 관리 UI**: 입고/재고 현황/유통기한 알림, 로트별 추적
+- [x] **제품 관리 UI**: 제품 CRUD, 영양성분 입력, 알러지 정보 관리
 - [x] **react-hook-form + date-fns**: 고급 폼 검증 및 날짜 처리
-- [ ] 원자재 관리 UI (입고/재고 현황/유통기한 알림)
+- [x] **일관성 있는 디자인**: blue 색상 스키마, 통일된 레이아웃 패턴
 - [ ] HACCP 컴플라이언스 리포트 (차트/시각화)
+- [ ] BOM 설정 UI (제품별 원자재 구성 관리)
 
 ### ❌ Infrastructure (0% 완료)
 - [ ] Docker 컨테이너화 (Django, React, MariaDB)
