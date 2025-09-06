@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { toast } from 'react-hot-toast';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import Header from '../components/layout/Header';
 import ProductForm from '../components/products/ProductForm';
@@ -7,21 +6,52 @@ import ProductList from '../components/products/ProductList';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ProductBOMManager from '../components/bom/ProductBOMManager';
 import BOMAlert from '../components/products/BOMAlert';
+import useEntityPage, { createServiceAdapter } from '../hooks/useEntityPage';
 import productService from '../services/productService';
 
 const ProductsPage = () => {
-  const [products, setProducts] = useState([]);
+  // productService를 useEntityPage 훅과 호환되도록 어댑터 생성
+  const productServiceAdapter = createServiceAdapter(productService, {
+    getAll: 'getProducts',
+    create: 'createProduct',
+    update: 'updateProduct',
+    delete: 'deleteProduct'
+  });
+
+  // useEntityPage 훅 사용 (기본 CRUD 기능)
+  const {
+    items: products,
+    loading,
+    showForm,
+    editingItem: editingProduct,
+    filters,
+    fetchItems: fetchProducts,
+    handleCreate: handleCreateProduct,
+    handleUpdate: handleUpdateProduct,
+    handleDelete: handleDeleteProduct,
+    handleEdit: handleEditProduct,
+    handleFormClose: handleFormCancel,
+    handleFilterChange,
+    setShowForm
+  } = useEntityPage(productServiceAdapter, '제품', {
+    initialFilters: {
+      search: '',
+      is_active: '',
+      bom_status: ''  // 'missing', 'set', '' for all
+    },
+    // 데이터 변경 후 BOM 알림을 위한 전체 제품 목록 업데이트
+    transformData: (data) => {
+      const productsList = data.results || data;
+      // CRUD 작업 후에는 전체 제품 목록도 업데이트
+      fetchAllProducts();
+      return productsList;
+    }
+  });
+
+  // BOM 관리 및 추가 기능용 상태들 (기존 유지)
   const [allProducts, setAllProducts] = useState([]); // BOM 알림용 전체 제품 목록
-  const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null);
   const [showBOMManager, setShowBOMManager] = useState(false);
   const [selectedProductForBOM, setSelectedProductForBOM] = useState(null);
-  const [filters, setFilters] = useState({
-    search: '',
-    is_active: '',
-    bom_status: ''  // 'missing', 'set', '' for all
-  });
   const [showBOMAlert, setShowBOMAlert] = useState(true);
 
   // 전체 제품 목록 조회 (BOM 알림용)
@@ -35,20 +65,7 @@ const ProductsPage = () => {
     }
   };
 
-  // 제품 목록 조회 (필터링된)
-  const fetchProducts = async () => {
-    try {
-      setLoading(true);
-      const data = await productService.getProducts(filters);
-      const productsList = data.results || data;
-      setProducts(productsList);
-    } catch (error) {
-      toast.error('제품 목록을 불러오는데 실패했습니다');
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // fetchProducts는 useEntityPage 훅에서 제공됨 (삭제됨)
 
   // BOM 상태에 따른 제품 필터링
   const getFilteredProducts = () => {
@@ -66,72 +83,23 @@ const ProductsPage = () => {
 
   const filteredProducts = getFilteredProducts();
 
-  useEffect(() => {
-    fetchProducts();
-  }, [filters]);
+  // fetchProducts useEffect는 useEntityPage 훅에서 자동 처리됨 (삭제됨)
 
   // 컴포넌트 초기 로드 시 전체 제품 목록 조회 (한 번만)
   useEffect(() => {
     fetchAllProducts();
   }, []);
 
-  // 제품 생성 처리
-  const handleCreateProduct = async (productData) => {
-    try {
-      await productService.createProduct(productData);
-      toast.success('제품이 성공적으로 생성되었습니다');
-      setShowForm(false);
-      fetchProducts();
-      fetchAllProducts(); // BOM 알림 업데이트
-    } catch (error) {
-      const errorMessage = error.response?.data?.non_field_errors?.[0] || 
-                          error.response?.data?.message || 
-                          '제품 생성에 실패했습니다';
-      toast.error(errorMessage);
-    }
-  };
+  // handleCreateProduct은 useEntityPage 훅에서 제공됨 (삭제됨)
+  // 단, BOM 알림 업데이트를 위해 fetchAllProducts 호출 필요
 
-  // 제품 수정 처리
-  const handleUpdateProduct = async (productData) => {
-    try {
-      await productService.updateProduct(editingProduct.id, productData);
-      toast.success('제품이 성공적으로 수정되었습니다');
-      setShowForm(false);
-      setEditingProduct(null);
-      fetchProducts();
-      fetchAllProducts(); // BOM 알림 업데이트
-    } catch (error) {
-      const errorMessage = error.response?.data?.non_field_errors?.[0] || 
-                          error.response?.data?.message || 
-                          '제품 수정에 실패했습니다';
-      toast.error(errorMessage);
-    }
-  };
+  // handleUpdateProduct은 useEntityPage 훅에서 제공됨 (삭제됨)
+  // 단, BOM 알림 업데이트를 위해 fetchAllProducts 호출 필요
 
-  // 제품 삭제 처리
-  const handleDeleteProduct = async (productId) => {
-    if (!window.confirm('정말로 이 제품을 삭제하시겠습니까?')) {
-      return;
-    }
+  // handleDeleteProduct은 useEntityPage 훅에서 제공됨 (삭제됨)
+  // 단, BOM 알림 업데이트를 위해 fetchAllProducts 호출 필요
 
-    try {
-      await productService.deleteProduct(productId);
-      toast.success('제품이 성공적으로 삭제되었습니다');
-      fetchProducts();
-      fetchAllProducts(); // BOM 알림 업데이트
-    } catch (error) {
-      const errorMessage = error.response?.data?.detail || 
-                          error.response?.data?.message || 
-                          '제품 삭제에 실패했습니다';
-      toast.error(errorMessage);
-    }
-  };
-
-  // 제품 수정 모드로 전환
-  const handleEditProduct = (product) => {
-    setEditingProduct(product);
-    setShowForm(true);
-  };
+  // handleEditProduct은 useEntityPage 훅에서 제공됨 (삭제됨)
 
   // BOM 관리 모드로 전환
   const handleManageBOM = (product) => {
@@ -139,19 +107,9 @@ const ProductsPage = () => {
     setShowBOMManager(true);
   };
 
-  // 필터 변경 처리
-  const handleFilterChange = (filterName, value) => {
-    setFilters(prev => ({
-      ...prev,
-      [filterName]: value
-    }));
-  };
+  // handleFilterChange는 useEntityPage 훅에서 제공됨 (삭제됨)
 
-  // 폼 취소 처리
-  const handleFormCancel = () => {
-    setShowForm(false);
-    setEditingProduct(null);
-  };
+  // handleFormCancel은 useEntityPage 훅에서 제공됨 (삭제됨)
 
   // BOM 관리 취소 처리
   const handleBOMManagerCancel = () => {

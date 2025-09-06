@@ -1,38 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import Header from '../components/layout/Header';
 import MaterialForm from '../components/materials/MaterialForm';
 import MaterialList from '../components/materials/MaterialList';
 import LoadingCard from '../components/common/LoadingCard';
+import useEntityPage, { createServiceAdapter } from '../hooks/useEntityPage';
 import materialService from '../services/materialService';
 import supplierService from '../services/supplierService';
 
 const MaterialsPage = () => {
   const navigate = useNavigate();
-  const [materials, setMaterials] = useState([]);
-  const [suppliers, setSuppliers] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [inventoryData, setInventoryData] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [editingMaterial, setEditingMaterial] = useState(null);
-  const [filters, setFilters] = useState({
-    search: '',
-    category: '',
-    supplier: '',
-    is_active: ''
+  
+  // materialService를 useEntityPage 훅과 호환되도록 어댑터 생성
+  const materialServiceAdapter = createServiceAdapter(materialService, {
+    getAll: 'getMaterials',
+    create: 'createMaterial',
+    update: 'updateMaterial',
+    delete: 'deleteMaterial'
   });
-  // 원자재 목록 조회
-  const fetchMaterials = async () => {
-    try {
-      setLoading(true);
-      const data = await materialService.getMaterials(filters);
+
+  // useEntityPage 훅 사용
+  const {
+    items: materials,
+    loading,
+    showForm,
+    editingItem: editingMaterial,
+    filters,
+    fetchItems: fetchMaterials,
+    handleCreate: handleCreateMaterial,
+    handleUpdate: handleUpdateMaterial,
+    handleDelete: handleDeleteMaterial,
+    handleEdit,
+    handleFormClose,
+    handleFilterChange,
+    setShowForm
+  } = useEntityPage(materialServiceAdapter, '원자재', {
+    initialFilters: {
+      search: '',
+      category: '',
+      supplier: '',
+      is_active: ''
+    },
+    transformData: (data) => {
       const materialsList = data.results || data;
-      setMaterials(materialsList);
-      
-      // 백엔드에서 제공하는 재고 정보를 inventoryData 형태로 변환
+      // 재고 정보 처리를 위해 setInventoryData 호출
       const inventorySummary = {};
       materialsList.forEach(material => {
         if (material.inventory_info) {
@@ -40,18 +52,17 @@ const MaterialsPage = () => {
         }
       });
       setInventoryData(inventorySummary);
-      
-    } catch (error) {
-      toast.error('원자재 목록을 불러오는데 실패했습니다');
-      console.error(error);
-    } finally {
-      setLoading(false);
+      return materialsList;
     }
-  };
+  });
 
-  useEffect(() => {
-    fetchMaterials();
-  }, [filters]);
+  // 기존 상태들 (useEntityPage로 커버되지 않는 것들)
+  const [suppliers, setSuppliers] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [inventoryData, setInventoryData] = useState({});
+  // fetchMaterials는 useEntityPage 훅에서 제공됨 (삭제됨)
+
+  // fetchMaterials useEffect는 useEntityPage 훅에서 자동 처리됨 (삭제됨)
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -72,77 +83,17 @@ const MaterialsPage = () => {
   }, []);
 
 
-  const handleCreateMaterial = async (materialData) => {
-    try {
-      await materialService.createMaterial(materialData);
-      toast.success('원자재가 등록되었습니다.');
-      setShowForm(false);
-      fetchMaterials();
-    } catch (error) {
-      console.error('원자재 생성 실패:', error);
-      if (error.response?.data) {
-        const errorMessages = Object.values(error.response.data).flat();
-        toast.error(`등록 실패: ${errorMessages.join(', ')}`);
-      } else {
-        toast.error('원자재 등록에 실패했습니다.');
-      }
-    }
-  };
+  // handleCreateMaterial은 useEntityPage 훅에서 제공됨 (삭제됨)
 
-  const handleUpdateMaterial = async (id, materialData) => {
-    try {
-      await materialService.updateMaterial(id, materialData);
-      toast.success('원자재 정보가 수정되었습니다.');
-      setEditingMaterial(null);
-      setShowForm(false);
-      fetchMaterials();
-    } catch (error) {
-      console.error('원자재 수정 실패:', error);
-      if (error.response?.data) {
-        const errorMessages = Object.values(error.response.data).flat();
-        toast.error(`수정 실패: ${errorMessages.join(', ')}`);
-      } else {
-        toast.error('원자재 수정에 실패했습니다.');
-      }
-    }
-  };
+  // handleUpdateMaterial은 useEntityPage 훅에서 제공됨 (삭제됨)
 
-  const handleDeleteMaterial = async (id) => {
-    if (!window.confirm('정말로 이 원자재를 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.')) {
-      return;
-    }
+  // handleDeleteMaterial은 useEntityPage 훅에서 제공됨 (삭제됨)
 
-    try {
-      await materialService.deleteMaterial(id);
-      toast.success('원자재가 삭제되었습니다.');
-      fetchMaterials();
-    } catch (error) {
-      console.error('원자재 삭제 실패:', error);
-      if (error.response?.status === 400) {
-        toast.error('사용 중인 원자재는 삭제할 수 없습니다.');
-      } else {
-        toast.error('원자재 삭제에 실패했습니다.');
-      }
-    }
-  };
+  // handleEdit은 useEntityPage 훅에서 제공됨 (삭제됨)
 
-  const handleEdit = (material) => {
-    setEditingMaterial(material);
-    setShowForm(true);
-  };
+  // handleFormClose는 useEntityPage 훅에서 제공됨 (삭제됨)
 
-  const handleFormClose = () => {
-    setShowForm(false);
-    setEditingMaterial(null);
-  };
-
-  // 필터 변경 처리
-  const handleFilterChange = (key, value) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value
-    }));
-  };
+  // handleFilterChange는 useEntityPage 훅에서 제공됨 (삭제됨)
 
   // 원자재 클릭 핸들러
   const handleMaterialClick = (material) => {

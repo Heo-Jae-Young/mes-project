@@ -81,6 +81,9 @@ apiClient.interceptors.response.use(
           // 실패한 요청에 새 토큰 적용하여 재시도
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           return apiClient(originalRequest);
+        } else {
+          // 리프레시 토큰이 없으면 바로 로그아웃 처리
+          throw new Error("No refresh token available");
         }
       } catch (refreshError) {
         // 큐에 있는 요청들을 실패 처리

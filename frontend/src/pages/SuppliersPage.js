@@ -1,116 +1,60 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-hot-toast';
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import Header from '../components/layout/Header';
 import SupplierForm from '../components/suppliers/SupplierForm';
 import SupplierList from '../components/suppliers/SupplierList';
 import LoadingCard from '../components/common/LoadingCard';
+import useEntityPage, { createServiceAdapter } from '../hooks/useEntityPage';
 import supplierService from '../services/supplierService';
 
 const SuppliersPage = () => {
   const navigate = useNavigate();
-  const [suppliers, setSuppliers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [editingSupplier, setEditingSupplier] = useState(null);
-  const [filters, setFilters] = useState({
-    search: '',
-    status: ''
+  
+  // supplierService를 useEntityPage 훅과 호환되도록 어댑터 생성
+  const supplierServiceAdapter = createServiceAdapter(supplierService, {
+    getAll: 'getSuppliers',
+    create: 'createSupplier',
+    update: 'updateSupplier',
+    delete: 'deleteSupplier'
   });
 
-  // 공급업체 목록 조회
-  const fetchSuppliers = async () => {
-    try {
-      setLoading(true);
-      const data = await supplierService.getSuppliers(filters);
-      const suppliersList = data.results || data;
-      setSuppliers(suppliersList);
-    } catch (error) {
-      toast.error('공급업체 목록을 불러오는데 실패했습니다');
-      console.error(error);
-    } finally {
-      setLoading(false);
+  // useEntityPage 훅 사용
+  const {
+    items: suppliers,
+    loading,
+    showForm,
+    editingItem: editingSupplier,
+    filters,
+    fetchItems: fetchSuppliers,
+    handleCreate: handleCreateSupplier,
+    handleUpdate: handleUpdateSupplier,
+    handleDelete: handleDeleteSupplier,
+    handleEdit,
+    handleFormClose,
+    handleFilterChange,
+    setShowForm
+  } = useEntityPage(supplierServiceAdapter, '공급업체', {
+    initialFilters: {
+      search: '',
+      status: ''
     }
-  };
+  });
 
-  useEffect(() => {
-    fetchSuppliers();
-  }, [filters]);
+  // fetchSuppliers는 useEntityPage 훅에서 제공됨 (삭제됨)
 
-  const handleCreateSupplier = async (supplierData) => {
-    try {
-      await supplierService.createSupplier(supplierData);
-      toast.success('공급업체가 등록되었습니다.');
-      setShowForm(false);
-      fetchSuppliers();
-    } catch (error) {
-      console.error('공급업체 생성 실패:', error);
-      if (error.response?.data) {
-        const errorMessages = Object.values(error.response.data).flat();
-        toast.error(`등록 실패: ${errorMessages.join(', ')}`);
-      } else {
-        toast.error('공급업체 등록에 실패했습니다.');
-      }
-    }
-  };
+  // fetchSuppliers useEffect는 useEntityPage 훅에서 자동 처리됨 (삭제됨)
 
-  const handleUpdateSupplier = async (id, supplierData) => {
-    try {
-      await supplierService.updateSupplier(id, supplierData);
-      toast.success('공급업체 정보가 수정되었습니다.');
-      setEditingSupplier(null);
-      setShowForm(false);
-      fetchSuppliers();
-    } catch (error) {
-      console.error('공급업체 수정 실패:', error);
-      if (error.response?.data) {
-        const errorMessages = Object.values(error.response.data).flat();
-        toast.error(`수정 실패: ${errorMessages.join(', ')}`);
-      } else {
-        toast.error('공급업체 수정에 실패했습니다.');
-      }
-    }
-  };
+  // handleCreateSupplier은 useEntityPage 훅에서 제공됨 (삭제됨)
 
-  const handleDeleteSupplier = async (id) => {
-    if (!window.confirm('정말로 이 공급업체를 삭제하시겠습니까?\n관련된 원자재 로트가 있는 경우 삭제할 수 없습니다.')) {
-      return;
-    }
+  // handleUpdateSupplier은 useEntityPage 훅에서 제공됨 (삭제됨)
 
-    try {
-      await supplierService.deleteSupplier(id);
-      toast.success('공급업체가 삭제되었습니다.');
-      fetchSuppliers();
-    } catch (error) {
-      console.error('공급업체 삭제 실패:', error);
-      if (error.response?.data?.detail) {
-        toast.error(error.response.data.detail);
-      } else if (error.response?.status === 400) {
-        toast.error('원자재 로트가 존재하는 공급업체는 삭제할 수 없습니다.');
-      } else {
-        toast.error('공급업체 삭제에 실패했습니다.');
-      }
-    }
-  };
+  // handleDeleteSupplier은 useEntityPage 훅에서 제공됨 (삭제됨)
 
-  const handleEdit = (supplier) => {
-    setEditingSupplier(supplier);
-    setShowForm(true);
-  };
+  // handleEdit은 useEntityPage 훅에서 제공됨 (삭제됨)
 
-  const handleFormClose = () => {
-    setShowForm(false);
-    setEditingSupplier(null);
-  };
+  // handleFormClose는 useEntityPage 훅에서 제공됨 (삭제됨)
 
-  // 필터 변경 처리
-  const handleFilterChange = (key, value) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value
-    }));
-  };
+  // handleFilterChange는 useEntityPage 훅에서 제공됨 (삭제됨)
 
   // 공급업체 클릭 핸들러
   const handleSupplierClick = (supplier) => {

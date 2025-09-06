@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import Header from '../components/layout/Header';
 import productionService from '../services/productionService';
@@ -6,35 +6,41 @@ import ProductionOrderList from '../components/lists/ProductionOrderList';
 import ProductionOrderForm from '../components/forms/ProductionOrderForm';
 import ProductionControls from '../components/production/ProductionControls';
 import LoadingCard from '../components/common/LoadingCard';
+import useEntityPage, { createServiceAdapter } from '../hooks/useEntityPage';
 
 const ProductionPage = () => {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [filters, setFilters] = useState({
-    status: '',
-    priority: '',
-    search: ''
+  // productionService를 useEntityPage 훅과 호환되도록 어댑터 생성 (삭제 기능 없음)
+  const productionServiceAdapter = createServiceAdapter(productionService, {
+    getAll: 'getProductionOrders',
+    create: 'createProductionOrder',
+    update: 'updateProductionOrder',
+    delete: null // 삭제 기능 없음
   });
 
-  // 생산 주문 목록 조회
-  const fetchOrders = async () => {
-    try {
-      setLoading(true);
-      const data = await productionService.getProductionOrders(filters);
-      setOrders(data.results || data);
-    } catch (error) {
-      toast.error('생산 주문 목록을 불러오는데 실패했습니다');
-      console.error(error);
-    } finally {
-      setLoading(false);
+  // useEntityPage 훅 사용 (기본 CRUD - 삭제 제외)
+  const {
+    items: orders,
+    loading,
+    showForm: showCreateForm,
+    filters,
+    fetchItems: fetchOrders,
+    handleCreate: handleCreateOrder,
+    handleFilterChange,
+    setShowForm: setShowCreateForm
+  } = useEntityPage(productionServiceAdapter, '생산 주문', {
+    initialFilters: {
+      status: '',
+      priority: '',
+      search: ''
     }
-  };
+  });
 
-  useEffect(() => {
-    fetchOrders();
-  }, [filters]);
+  // 생산 제어 전용 상태 (기존 유지)
+  const [selectedOrder, setSelectedOrder] = useState(null);
+
+  // fetchOrders는 useEntityPage 훅에서 제공됨 (삭제됨)
+
+  // fetchOrders useEffect는 useEntityPage 훅에서 자동 처리됨 (삭제됨)
 
   // 생산 시작 처리
   const handleStartProduction = async (orderId) => {
@@ -93,26 +99,9 @@ const ProductionPage = () => {
     }
   };
 
-  // 새 생산 주문 생성
-  const handleCreateOrder = async (orderData) => {
-    try {
-      await productionService.createProductionOrder(orderData);
-      toast.success('생산 주문이 생성되었습니다');
-      setShowCreateForm(false);
-      fetchOrders();
-    } catch (error) {
-      toast.error('생산 주문 생성에 실패했습니다');
-      console.error(error);
-    }
-  };
+  // handleCreateOrder는 useEntityPage 훅에서 제공됨 (삭제됨)
 
-  // 필터 변경 처리
-  const handleFilterChange = (key, value) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value
-    }));
-  };
+  // handleFilterChange는 useEntityPage 훅에서 제공됨 (삭제됨)
 
   return (
     <div className="min-h-screen bg-gray-50">
