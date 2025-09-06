@@ -104,6 +104,9 @@ npm install
 - **CCP:** Critical Control Points definition
 - **CCPLog:** Immutable HACCP monitoring logs
 
+**계획된 모델:**
+- **MaterialLotUsage:** 로트별 상세 소비 이력 (언제, 누가, 얼마나, 왜, 어떤 생산오더에서)
+
 ## Current Project Status
 
 ### 📊 Overall Progress
@@ -180,6 +183,15 @@ npm install
 - FIFO 원칙 기반 재고 소비 처리
 - 완전한 추적성 (lot-to-lot traceability)
 
+**Advanced Lot Management System** ✅
+
+- 로트별 상세 정보 조회 모달 (로트 번호 클릭)
+- 품질검사 상태 변경 기능 (pending → pass/fail)
+- 사용 이력 및 추적성 타임라인 시각화
+- 로트 비활성화/폐기 처리 (expired/rejected)
+- 단가 정보 및 현재 가치 계산 표시
+- HACCP 추적성 정보 완전 표시
+
 **Product Management**
 
 - 완제품 카탈로그 CRUD (`/products`)
@@ -218,12 +230,12 @@ npm install
 
 **최우선 (현재 작업)**
 
-1. **로트 관리 시스템 개선** 🔍
-   - 원자재 관리에서 로트별 상세 정보 조회 모달
-   - 품질검사 상태 변경 기능 (pending → pass/fail)
-   - 로트 사용 이력 추적 및 소비량 기록
-   - 로트 비활성화/폐기 처리 (논리적 삭제)
-   - HACCP 추적성 강화를 위한 완전한 로트 감사 시스템
+1. **MaterialLotUsage 모델 및 상세 소비 이력 시스템** 📝
+   - MaterialLot 소비 기록을 별도 테이블로 완전 추적
+   - 하이브리드 접근법: MaterialLot.quantity_current + MaterialLotUsage 이력
+   - 누가, 언제, 얼마나, 왜, 어떤 생산오더에서 소비했는지 완전 기록
+   - HACCP 감사 추적 (audit trail) 완벽 지원
+   - 비동기 로깅으로 성능 최적화
 
 2. **공급업체 관리 UI 구현** 🏢
    - 공급업체 등록/조회/수정 페이지
