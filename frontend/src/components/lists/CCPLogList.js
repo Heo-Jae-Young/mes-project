@@ -195,8 +195,9 @@ const CCPLogList = ({ ccpId = null, refreshTrigger = 0 }) => {
 
       {/* 로그 테이블 */}
       {logs.length > 0 ? (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
+        <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -260,6 +261,7 @@ const CCPLogList = ({ ccpId = null, refreshTrigger = 0 }) => {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       ) : (
         <div className="text-center py-8 text-gray-500">

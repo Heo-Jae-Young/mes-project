@@ -11,6 +11,7 @@ import productService from '../services/productService';
 
 const ProductsPage = () => {
   const [products, setProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState([]); // BOM 알림용 전체 제품 목록
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -23,7 +24,18 @@ const ProductsPage = () => {
   });
   const [showBOMAlert, setShowBOMAlert] = useState(true);
 
-  // 제품 목록 조회
+  // 전체 제품 목록 조회 (BOM 알림용)
+  const fetchAllProducts = async () => {
+    try {
+      const data = await productService.getProducts({}); // 필터 없이 전체 조회
+      const productsList = data.results || data;
+      setAllProducts(productsList);
+    } catch (error) {
+      console.error('전체 제품 목록 조회 실패:', error);
+    }
+  };
+
+  // 제품 목록 조회 (필터링된)
   const fetchProducts = async () => {
     try {
       setLoading(true);
@@ -58,6 +70,11 @@ const ProductsPage = () => {
     fetchProducts();
   }, [filters]);
 
+  // 컴포넌트 초기 로드 시 전체 제품 목록 조회 (한 번만)
+  useEffect(() => {
+    fetchAllProducts();
+  }, []);
+
   // 제품 생성 처리
   const handleCreateProduct = async (productData) => {
     try {
@@ -65,6 +82,7 @@ const ProductsPage = () => {
       toast.success('제품이 성공적으로 생성되었습니다');
       setShowForm(false);
       fetchProducts();
+      fetchAllProducts(); // BOM 알림 업데이트
     } catch (error) {
       const errorMessage = error.response?.data?.non_field_errors?.[0] || 
                           error.response?.data?.message || 
@@ -81,6 +99,7 @@ const ProductsPage = () => {
       setShowForm(false);
       setEditingProduct(null);
       fetchProducts();
+      fetchAllProducts(); // BOM 알림 업데이트
     } catch (error) {
       const errorMessage = error.response?.data?.non_field_errors?.[0] || 
                           error.response?.data?.message || 
@@ -99,6 +118,7 @@ const ProductsPage = () => {
       await productService.deleteProduct(productId);
       toast.success('제품이 성공적으로 삭제되었습니다');
       fetchProducts();
+      fetchAllProducts(); // BOM 알림 업데이트
     } catch (error) {
       const errorMessage = error.response?.data?.detail || 
                           error.response?.data?.message || 
@@ -165,7 +185,7 @@ const ProductsPage = () => {
         {/* BOM 알림 */}
         {showBOMAlert && (
           <BOMAlert
-            products={products}
+            products={allProducts}
             onManageBOM={handleManageBOM}
             onDismiss={() => setShowBOMAlert(false)}
           />

@@ -5,7 +5,7 @@ import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import Header from '../components/layout/Header';
 import MaterialForm from '../components/materials/MaterialForm';
 import MaterialList from '../components/materials/MaterialList';
-import LoadingSpinner from '../components/common/LoadingSpinner';
+import LoadingCard from '../components/common/LoadingCard';
 import materialService from '../services/materialService';
 import supplierService from '../services/supplierService';
 
@@ -238,25 +238,18 @@ const MaterialsPage = () => {
         </div>
 
         {/* 원자재 목록 */}
-        <div className="bg-white rounded-lg shadow">
-          {loading ? (
-            <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-2 text-gray-500">로딩중...</p>
-            </div>
-          ) : (
-            <MaterialList
-              materials={materials}
-              suppliers={suppliers}
-              categories={categories}
-              inventoryData={inventoryData}
-              loading={loading}
-              onEdit={handleEdit}
-              onDelete={handleDeleteMaterial}
-              onMaterialClick={handleMaterialClick}
-            />
-          )}
-        </div>
+        <LoadingCard loading={loading} className="p-8 text-center">
+          <MaterialList
+            materials={materials}
+            suppliers={suppliers}
+            categories={categories}
+            inventoryData={inventoryData}
+            loading={loading}
+            onEdit={handleEdit}
+            onDelete={handleDeleteMaterial}
+            onMaterialClick={handleMaterialClick}
+          />
+        </LoadingCard>
 
         {/* 원자재 폼 모달 */}
         {showForm && (

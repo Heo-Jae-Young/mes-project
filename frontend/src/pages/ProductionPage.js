@@ -5,6 +5,7 @@ import productionService from '../services/productionService';
 import ProductionOrderList from '../components/lists/ProductionOrderList';
 import ProductionOrderForm from '../components/forms/ProductionOrderForm';
 import ProductionControls from '../components/production/ProductionControls';
+import LoadingCard from '../components/common/LoadingCard';
 
 const ProductionPage = () => {
   const [orders, setOrders] = useState([]);
@@ -200,23 +201,16 @@ const ProductionPage = () => {
         </div>
 
         {/* 생산 주문 목록 */}
-        <div className="bg-white rounded-lg shadow">
-          {loading ? (
-            <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-2 text-gray-500">로딩중...</p>
-            </div>
-          ) : (
-            <ProductionOrderList
-              orders={orders}
-              onStartProduction={handleStartProduction}
-              onCompleteProduction={handleCompleteProduction}
-              onPauseProduction={handlePauseProduction}
-              onResumeProduction={handleResumeProduction}
-              onSelectOrder={setSelectedOrder}
-            />
-          )}
-        </div>
+        <LoadingCard loading={loading} className="p-8 text-center">
+          <ProductionOrderList
+            orders={orders}
+            onStartProduction={handleStartProduction}
+            onCompleteProduction={handleCompleteProduction}
+            onPauseProduction={handlePauseProduction}
+            onResumeProduction={handleResumeProduction}
+            onSelectOrder={setSelectedOrder}
+          />
+        </LoadingCard>
 
         {/* 생산 주문 생성 모달 */}
         {showCreateForm && (

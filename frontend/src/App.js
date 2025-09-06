@@ -8,6 +8,8 @@ import DashboardPage from './pages/DashboardPage';
 import CCPLogsPage from './pages/CCPLogsPage';
 import ProductionPage from './pages/ProductionPage';
 import ProductsPage from './pages/ProductsPage';
+import SuppliersPage from './pages/SuppliersPage';
+import SupplierDetailPage from './pages/SupplierDetailPage';
 import MaterialsPage from './pages/MaterialsPage';
 import MaterialDetailPage from './pages/MaterialDetailPage';
 
@@ -44,6 +46,18 @@ function App() {
             <Route path="/products" element={
               <ProtectedRoute>
                 <ProductsPage />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/suppliers" element={
+              <ProtectedRoute>
+                <SuppliersPage />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/suppliers/:id" element={
+              <ProtectedRoute>
+                <SupplierDetailPage />
               </ProtectedRoute>
             } />
             

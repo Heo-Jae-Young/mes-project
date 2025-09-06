@@ -54,6 +54,50 @@ class SupplierService {
       throw error;
     }
   }
+
+  // 공급업체 통계 정보
+  async getSupplierStatistics() {
+    try {
+      const response = await apiClient.get('/suppliers/statistics/');
+      return response.data;
+    } catch (error) {
+      console.error('공급업체 통계 조회 실패:', error);
+      throw error;
+    }
+  }
+
+  // 특정 공급업체의 원자재 목록
+  async getSupplierMaterials(supplierId) {
+    try {
+      const response = await apiClient.get(`/suppliers/${supplierId}/materials/`);
+      return response.data;
+    } catch (error) {
+      console.error('공급업체 원자재 목록 조회 실패:', error);
+      throw error;
+    }
+  }
+
+  // 특정 공급업체의 로트 목록
+  async getSupplierLots(supplierId, params = {}) {
+    try {
+      const response = await apiClient.get(`/suppliers/${supplierId}/material_lots/`, { params });
+      return response.data;
+    } catch (error) {
+      console.error('공급업체 로트 목록 조회 실패:', error);
+      throw error;
+    }
+  }
+
+  // 공급업체 성과 정보
+  async getSupplierPerformance(supplierId) {
+    try {
+      const response = await apiClient.get(`/suppliers/${supplierId}/performance/`);
+      return response.data;
+    } catch (error) {
+      console.error('공급업체 성과 조회 실패:', error);
+      throw error;
+    }
+  }
 }
 
 const supplierService = new SupplierService();
