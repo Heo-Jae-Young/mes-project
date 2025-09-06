@@ -23,6 +23,22 @@ apiClient.interceptors.request.use(
   }
 );
 
+// 토큰 리프레시 진행 상태를 추적하는 변수
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  
+  failedQueue = [];
+};
+
 // 응답 인터셉터: 토큰 만료 시 자동 리프레시
 apiClient.interceptors.response.use(
   (response) => {
@@ -33,7 +49,20 @@ apiClient.interceptors.response.use(
 
     // 401 에러이고 재시도하지 않은 경우
     if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        // 이미 리프레시가 진행 중이면 큐에 추가
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(token => {
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return apiClient(originalRequest);
+        }).catch(err => {
+          return Promise.reject(err);
+        });
+      }
+
       originalRequest._retry = true;
+      isRefreshing = true;
 
       try {
         const refreshToken = localStorage.getItem('refreshToken');
@@ -45,12 +74,18 @@ apiClient.interceptors.response.use(
 
           const newAccessToken = response.data.access;
           localStorage.setItem('accessToken', newAccessToken);
+          
+          // 큐에 있는 요청들을 처리
+          processQueue(null, newAccessToken);
 
           // 실패한 요청에 새 토큰 적용하여 재시도
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           return apiClient(originalRequest);
         }
       } catch (refreshError) {
+        // 큐에 있는 요청들을 실패 처리
+        processQueue(refreshError, null);
+        
         // 리프레시 토큰도 만료된 경우 로그아웃
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
@@ -59,6 +94,8 @@ apiClient.interceptors.response.use(
         // 로그인 페이지로 리디렉션
         window.location.href = '/login';
         return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
       }
     }
 

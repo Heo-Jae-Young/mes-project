@@ -112,6 +112,30 @@ class ProductService {
       throw error;
     }
   }
+
+  // 제품 원가 계산
+  async getProductCost(productId, quantity = 1) {
+    try {
+      const response = await apiClient.get(`/products/${productId}/cost/`, {
+        params: { quantity }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('제품 원가 조회 실패:', error);
+      throw error;
+    }
+  }
+
+  // 전체 제품 원가 요약
+  async getProductsCostSummary() {
+    try {
+      const response = await apiClient.get('/products/cost-summary/');
+      return response.data;
+    } catch (error) {
+      console.error('제품 원가 요약 조회 실패:', error);
+      throw error;
+    }
+  }
 }
 
 const productService = new ProductService();
