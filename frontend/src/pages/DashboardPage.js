@@ -1,43 +1,64 @@
-import React, { useContext, useState, useEffect } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import Header from '../components/layout/Header';
+import LoadingCard from '../components/common/LoadingCard';
 import InventorySummary from '../components/inventory/InventorySummary';
 import InventoryAlerts from '../components/inventory/InventoryAlerts';
 import apiClient from '../services/apiClient';
-import { toast } from 'react-hot-toast';
 
 const DashboardPage = () => {
   const { user } = useContext(AuthContext);
   const [stats, setStats] = useState(null);
   const [recentCcpLogs, setRecentCcpLogs] = useState([]);
   const [activeProductionOrders, setActiveProductionOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingStates, setLoadingStates] = useState({
+    stats: true,
+    ccpLogs: true,
+    productionOrders: true
+  });
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      setLoading(true);
+    // 통계 데이터 로드
+    const fetchStats = async () => {
       try {
-        // 여러 API를 병렬로 호출
-        const [statsRes, ccpLogsRes, prodOrdersRes] = await Promise.all([
-          apiClient.get('/statistics/'),
-          apiClient.get('/ccp-logs/?limit=5'), // 최근 5개만
-          apiClient.get('/production-orders/?status=in_progress'),
-        ]);
-
-        setStats(statsRes.data);
-        setRecentCcpLogs(ccpLogsRes.data.results);
-        setActiveProductionOrders(prodOrdersRes.data.results);
-
+        const response = await apiClient.get('/statistics/');
+        setStats(response.data);
       } catch (error) {
-        toast.error('대시보드 데이터를 불러오는 중 오류가 발생했습니다.');
-        console.error(error);
+        console.error('통계 데이터 로드 실패:', error);
       } finally {
-        setLoading(false);
+        setLoadingStates(prev => ({ ...prev, stats: false }));
       }
     };
 
-    fetchDashboardData();
+    // CCP 로그 데이터 로드
+    const fetchCcpLogs = async () => {
+      try {
+        const response = await apiClient.get('/ccp-logs/?limit=5');
+        setRecentCcpLogs(response.data.results);
+      } catch (error) {
+        console.error('CCP 로그 데이터 로드 실패:', error);
+      } finally {
+        setLoadingStates(prev => ({ ...prev, ccpLogs: false }));
+      }
+    };
+
+    // 생산 주문 데이터 로드
+    const fetchProductionOrders = async () => {
+      try {
+        const response = await apiClient.get('/production-orders/?status=in_progress');
+        setActiveProductionOrders(response.data.results);
+      } catch (error) {
+        console.error('생산 주문 데이터 로드 실패:', error);
+      } finally {
+        setLoadingStates(prev => ({ ...prev, productionOrders: false }));
+      }
+    };
+
+    // 각각 독립적으로 실행
+    fetchStats();
+    fetchCcpLogs();
+    fetchProductionOrders();
   }, []);
 
   const getRoleDisplayName = (role) => {
@@ -53,13 +74,6 @@ const DashboardPage = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>대시보드 데이터를 불러오는 중입니다...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -109,7 +123,9 @@ const DashboardPage = () => {
                         HACCP 준수율
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        {stats ? `${stats.compliance_rate}%` : '로딩 중...'}
+                        <LoadingCard loading={loadingStates.stats}>
+                          {stats ? `${stats.compliance_rate}%` : 'N/A'}
+                        </LoadingCard>
                       </dd>
                     </dl>
                   </div>
@@ -139,7 +155,9 @@ const DashboardPage = () => {
                         진행중인 생산 오더
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        {activeProductionOrders ? `${activeProductionOrders.length} 건` : '로딩 중...'}
+                        <LoadingCard loading={loadingStates.productionOrders}>
+                          {`${activeProductionOrders.length} 건`}
+                        </LoadingCard>
                       </dd>
                     </dl>
                   </div>
@@ -169,7 +187,9 @@ const DashboardPage = () => {
                         최근 중요 이탈
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        {stats ? `${stats.critical_issues_count} 건` : '로딩 중...'}
+                        <LoadingCard loading={loadingStates.stats}>
+                          {stats ? `${stats.critical_issues_count} 건` : 'N/A'}
+                        </LoadingCard>
                       </dd>
                     </dl>
                   </div>
@@ -195,27 +215,29 @@ const DashboardPage = () => {
                 </h3>
                 <div className="mt-5">
                   <div className="flow-root">
-                    {recentCcpLogs.length > 0 ? (
-                      <ul className="-my-5 divide-y divide-gray-200">
-                        {recentCcpLogs.map((log) => (
-                          <li key={log.id} className="py-5">
-                            <div className="relative focus-within:ring-2 focus-within:ring-indigo-500">
-                              <h3 className="text-sm font-semibold text-gray-800">
-                                {log.ccp.name} - {log.measured_value}{log.unit}
-                              </h3>
-                              <p className={`mt-1 text-sm ${log.is_within_limits ? 'text-green-600' : 'text-red-600'}`}>
-                                {log.is_within_limits ? '정상' : '이탈'} - {log.status}
-                              </p>
-                              <p className="mt-1 text-xs text-gray-500">
-                                {new Date(log.created_at).toLocaleString()}
-                              </p>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-sm text-gray-500">최근 활동이 없습니다.</p>
-                    )}
+                    <LoadingCard loading={loadingStates.ccpLogs} className="py-8 text-center">
+                      {recentCcpLogs.length > 0 ? (
+                        <ul className="-my-5 divide-y divide-gray-200">
+                          {recentCcpLogs.map((log) => (
+                            <li key={log.id} className="py-5">
+                              <div className="relative focus-within:ring-2 focus-within:ring-indigo-500">
+                                <h3 className="text-sm font-semibold text-gray-800">
+                                  {log.ccp.name} - {log.measured_value}{log.unit}
+                                </h3>
+                                <p className={`mt-1 text-sm ${log.is_within_limits ? 'text-green-600' : 'text-red-600'}`}>
+                                  {log.is_within_limits ? '정상' : '이탈'} - {log.status}
+                                </p>
+                                <p className="mt-1 text-xs text-gray-500">
+                                  {new Date(log.created_at).toLocaleString()}
+                                </p>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-gray-500">최근 활동이 없습니다.</p>
+                      )}
+                    </LoadingCard>
                   </div>
                 </div>
               </div>
