@@ -198,9 +198,19 @@ npm install
 - BOM CRUD: 생성, 조회, 수정, 삭제 및 실시간 유효성 검증
 - 생산 주문 생성 시 BOM 설정 여부 자동 검증
 
+**Product Cost Calculation System**
+
+- BOM 기반 제품 원가 자동 계산 (`/api/products/{id}/cost/`)
+- FIFO 원칙 기반 실시간 원자재 가격 산정
+- 가격 산출 우선순위: 현재재고 → 최근30일평균 → 전체평균
+- 제품 목록에서 실시간 예상 원가 표시 (색상 코딩)
+- 원가 상세 내역 모달: 원자재별 분해, 가격 산출 방식, 경고사항
+- BOM 미설정 제품 알림 및 필터링 기능
+- 완전한 HACCP 추적성을 통한 정확한 원가 계산
+
 ### ⚠️ Current Limitations
 
-- **BOM 고급 기능 미구현**: BOM 일괄 등록, 버전 관리, 원가 계산 등
+- **BOM 고급 기능 미구현**: BOM 일괄 등록, 버전 관리 등
 - **공급업체 관리 UI 미구현**: 공급업체 등록/관리 기능 필요
 - **실시간 알림 시스템**: WebSocket 기반 즉시 알림 미구현
 
@@ -208,32 +218,37 @@ npm install
 
 **최우선 (현재 작업)**
 
-1. **BOM 시스템 개선** 🔧
-   - BOM 미설정 제품 알림 기능
-   - BOM 기반 제품 원가 계산 
-   - 제품 목록에서 BOM 설정 현황 표시
-   - BOM 일괄 등록 기능 (CSV/Excel)
-   - BOM 버전 관리 및 이력 추적
+1. **공급업체 관리 UI 구현** 🏢
+   - 공급업체 등록/조회/수정 페이지
+   - 원자재 관리에서 공급업체 선택 연동
+   - 공급업체별 원자재 목록 및 가격 이력
 
 2. **HACCP 컴플라이언스 리포트** 📊
    - CCP별 규정 준수율 대시보드 (chart.js 활용)
    - 시간대별 트렌드 차트 및 분석
    - PDF/Excel 리포트 내보내기
 
-**중기 목표** 4. **실시간 알림 시스템** 🔔
+**중기 목표**
 
-- WebSocket 기반 실시간 알림 (Django Channels)
-- 중요 이탈/유통기한 임박 등 즉시 알림
+3. **BOM 시스템 고도화** 🔧
+   - BOM 일괄 등록 기능 (CSV/Excel)
+   - BOM 버전 관리 및 이력 추적
+   - 원가 변동 추이 분석
+
+4. **실시간 알림 시스템** 🔔
+   - WebSocket 기반 실시간 알림 (Django Channels)
+   - 중요 이탈/유통기한 임박 등 즉시 알림
 
 5. **모바일 반응형 UI** 📱
    - 태블릿/모바일 환경 최적화
    - PWA(Progressive Web App) 지원
 
-**장기 목표** 6. **배포 및 운영** 🚀
+**장기 목표**
 
-- Docker 컨테이너화 (Django, React, MariaDB)
-- Nginx 프로덕션 환경 구성
-- 클라우드 배포 (AWS/DigitalOcean)
+6. **배포 및 운영** 🚀
+   - Docker 컨테이너화 (Django, React, MariaDB)
+   - Nginx 프로덕션 환경 구성
+   - 클라우드 배포 (AWS/DigitalOcean)
 
 ## Environment Variables
 

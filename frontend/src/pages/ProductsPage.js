@@ -6,6 +6,7 @@ import ProductForm from '../components/products/ProductForm';
 import ProductList from '../components/products/ProductList';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ProductBOMManager from '../components/bom/ProductBOMManager';
+import BOMAlert from '../components/products/BOMAlert';
 import productService from '../services/productService';
 
 const ProductsPage = () => {
@@ -17,8 +18,10 @@ const ProductsPage = () => {
   const [selectedProductForBOM, setSelectedProductForBOM] = useState(null);
   const [filters, setFilters] = useState({
     search: '',
-    is_active: ''
+    is_active: '',
+    bom_status: ''  // 'missing', 'set', '' for all
   });
+  const [showBOMAlert, setShowBOMAlert] = useState(true);
 
   // 제품 목록 조회
   const fetchProducts = async () => {
@@ -34,6 +37,22 @@ const ProductsPage = () => {
       setLoading(false);
     }
   };
+
+  // BOM 상태에 따른 제품 필터링
+  const getFilteredProducts = () => {
+    if (!filters.bom_status) return products;
+    
+    return products.filter(product => {
+      if (filters.bom_status === 'missing') {
+        return !product.has_bom && product.is_active;
+      } else if (filters.bom_status === 'set') {
+        return product.has_bom;
+      }
+      return true;
+    });
+  };
+
+  const filteredProducts = getFilteredProducts();
 
   useEffect(() => {
     fetchProducts();
@@ -143,9 +162,18 @@ const ProductsPage = () => {
           </div>
         </div>
 
+        {/* BOM 알림 */}
+        {showBOMAlert && (
+          <BOMAlert
+            products={products}
+            onManageBOM={handleManageBOM}
+            onDismiss={() => setShowBOMAlert(false)}
+          />
+        )}
+
         {/* 필터 영역 */}
         <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             {/* 검색 */}
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -179,13 +207,41 @@ const ProductsPage = () => {
               </select>
             </div>
 
+            {/* BOM 상태 필터 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                BOM 상태
+              </label>
+              <select
+                value={filters.bom_status}
+                onChange={(e) => handleFilterChange('bom_status', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">전체</option>
+                <option value="missing">BOM 미설정</option>
+                <option value="set">BOM 설정됨</option>
+              </select>
+            </div>
+
             {/* 빈 공간 */}
             <div></div>
             
             {/* 통계 정보 */}
             <div className="flex items-end">
-              <div className="text-sm text-gray-600">
-                총 제품 수: <span className="font-semibold text-gray-900">{products.length}</span>개
+              <div className="text-sm text-gray-600 space-y-1">
+                <div>
+                  총 제품 수: <span className="font-semibold text-gray-900">{products.length}</span>개
+                </div>
+                {filters.bom_status === 'missing' && (
+                  <div className="text-orange-600 font-medium">
+                    BOM 미설정: {filteredProducts.length}개
+                  </div>
+                )}
+                {filters.bom_status === '' && (
+                  <div className="text-orange-600">
+                    BOM 미설정: {products.filter(p => !p.has_bom && p.is_active).length}개
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -196,7 +252,7 @@ const ProductsPage = () => {
           <LoadingSpinner />
         ) : (
           <ProductList
-            products={products}
+            products={filteredProducts}
             onEdit={handleEditProduct}
             onDelete={handleDeleteProduct}
             onManageBOM={handleManageBOM}

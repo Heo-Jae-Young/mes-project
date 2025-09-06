@@ -7,6 +7,9 @@ class FinishedProductSerializer(serializers.ModelSerializer):
     """완제품 조회용 Serializer"""
     
     created_by = UserSerializer(read_only=True)
+    has_bom = serializers.SerializerMethodField()
+    estimated_unit_cost = serializers.SerializerMethodField()
+    cost_calculation_status = serializers.SerializerMethodField()
     
     class Meta:
         model = FinishedProduct
@@ -14,9 +17,43 @@ class FinishedProductSerializer(serializers.ModelSerializer):
             'id', 'name', 'code', 'description', 'version', 'shelf_life_days',
             'storage_temp_min', 'storage_temp_max', 'net_weight', 'packaging_type',
             'allergen_info', 'nutrition_facts', 'is_active',
-            'created_at', 'updated_at', 'created_by'
+            'created_at', 'updated_at', 'created_by', 'has_bom',
+            'estimated_unit_cost', 'cost_calculation_status'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'created_by']
+        read_only_fields = [
+            'id', 'created_at', 'updated_at', 'created_by', 'has_bom',
+            'estimated_unit_cost', 'cost_calculation_status'
+        ]
+    
+    def get_has_bom(self, obj):
+        """BOM 설정 여부 확인"""
+        return obj.bom_items.filter(is_active=True).exists()
+    
+    def get_estimated_unit_cost(self, obj):
+        """예상 단위 원가 계산"""
+        try:
+            from ..services.cost_calculation_service import CostCalculationService
+            cost_info = CostCalculationService.calculate_product_cost(str(obj.id))
+            return str(cost_info['unit_cost'])
+        except Exception:
+            return "0"
+    
+    def get_cost_calculation_status(self, obj):
+        """원가 계산 상태 정보"""
+        try:
+            from ..services.cost_calculation_service import CostCalculationService
+            cost_info = CostCalculationService.calculate_product_cost(str(obj.id))
+            return {
+                'bom_missing': cost_info['bom_missing'],
+                'calculation_method': cost_info['calculation_method'],
+                'has_warnings': len(cost_info['warnings']) > 0
+            }
+        except Exception:
+            return {
+                'bom_missing': True,
+                'calculation_method': 'error',
+                'has_warnings': True
+            }
 
 
 class FinishedProductCreateSerializer(serializers.ModelSerializer):

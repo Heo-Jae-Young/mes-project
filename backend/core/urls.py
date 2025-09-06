@@ -17,6 +17,11 @@ from core.views import (
     StatisticsAPIView,
 )
 from core.views.bom_views import BOMViewSet
+from core.views.cost_calculation_views import (
+    calculate_product_cost,
+    products_cost_summary, 
+    material_price_info
+)
 
 # DRF Router로 ViewSet URL 자동 생성
 router = DefaultRouter()
@@ -40,6 +45,11 @@ urlpatterns = [
     
     # Statistics endpoint
     path('statistics/', StatisticsAPIView.as_view(), name='statistics'),
+    
+    # Cost calculation endpoints
+    path('products/<uuid:product_id>/cost/', calculate_product_cost, name='product_cost'),
+    path('products/cost-summary/', products_cost_summary, name='products_cost_summary'),
+    path('raw-materials/<uuid:material_id>/price-info/', material_price_info, name='material_price_info'),
 
     # API endpoints
     path('', include(router.urls)),
