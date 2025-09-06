@@ -12,6 +12,7 @@ import Header from '../components/layout/Header';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import MaterialLotForm from '../components/materials/MaterialLotForm';
 import MaterialForm from '../components/materials/MaterialForm';
+import MaterialLotDetailModal from '../components/materials/MaterialLotDetailModal';
 import materialService from '../services/materialService';
 import supplierService from '../services/supplierService';
 
@@ -27,6 +28,8 @@ const MaterialDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [showLotForm, setShowLotForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showLotDetailModal, setShowLotDetailModal] = useState(false);
+  const [selectedLot, setSelectedLot] = useState(null);
   const [consumingLot, setConsumingLot] = useState(null);
   const [consumeQuantity, setConsumeQuantity] = useState('');
 
@@ -120,6 +123,16 @@ const MaterialDetailPage = () => {
     return diffDays;
   };
 
+  // 통화 포맷팅
+  const formatCurrency = (value) => {
+    if (!value || value === 0) return '-';
+    return new Intl.NumberFormat('ko-KR', {
+      style: 'currency',
+      currency: 'KRW',
+      minimumFractionDigits: 0,
+    }).format(value);
+  };
+
   // 입고 처리 핸들러
   const handleCreateLot = async (lotData) => {
     try {
@@ -191,6 +204,12 @@ const MaterialDetailPage = () => {
         toast.error('원자재 수정에 실패했습니다.');
       }
     }
+  };
+
+  // 로트 상세보기 핸들러
+  const handleViewLotDetail = (lot) => {
+    setSelectedLot(lot);
+    setShowLotDetailModal(true);
   };
 
   // 로트 삭제 핸들러
@@ -379,6 +398,9 @@ const MaterialDetailPage = () => {
                       수량
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      단가/총 가치
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       상태
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -393,7 +415,13 @@ const MaterialDetailPage = () => {
                   {lots.map((lot) => (
                     <tr key={lot.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-gray-900">{lot.lot_number}</div>
+                        <div 
+                          className="text-sm font-medium text-blue-600 hover:text-blue-800 cursor-pointer hover:underline"
+                          onClick={() => handleViewLotDetail(lot)}
+                          title="로트 상세정보 보기"
+                        >
+                          {lot.lot_number}
+                        </div>
                         <div className="text-sm text-gray-500">#{lot.id.slice(0, 8)}</div>
                       </td>
                       <td className="px-6 py-4">
@@ -415,6 +443,17 @@ const MaterialDetailPage = () => {
                         </div>
                         <div className="text-sm text-gray-500">
                           사용률: {((lot.quantity_received - lot.quantity_current) / lot.quantity_received * 100).toFixed(1)}%
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900">
+                          {formatCurrency(lot.unit_price)}
+                        </div>
+                        <div className="text-sm font-medium text-blue-600">
+                          {formatCurrency(lot.quantity_current * lot.unit_price)}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          현재 가치
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -483,6 +522,18 @@ const MaterialDetailPage = () => {
           material={material}
           suppliers={suppliers}
           categories={categories}
+        />
+
+        {/* 로트 상세 정보 모달 */}
+        <MaterialLotDetailModal
+          isOpen={showLotDetailModal}
+          onClose={() => {
+            setShowLotDetailModal(false);
+            setSelectedLot(null);
+          }}
+          lot={selectedLot}
+          material={material}
+          onLotUpdated={loadMaterialDetail}
         />
 
         {/* 로트 소비 모달 */}

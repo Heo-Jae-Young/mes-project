@@ -141,6 +141,17 @@ class MaterialService {
     }
   }
 
+  // 로트 업데이트 (품질검사 상태 등)
+  async updateMaterialLot(lotId, updateData) {
+    try {
+      const response = await apiClient.patch(`/material-lots/${lotId}/`, updateData);
+      return response.data;
+    } catch (error) {
+      console.error('로트 업데이트 실패:', error);
+      throw error;
+    }
+  }
+
   // 로트 삭제
   async deleteMaterialLot(lotId) {
     try {
