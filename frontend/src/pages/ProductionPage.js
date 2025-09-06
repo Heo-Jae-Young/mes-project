@@ -42,7 +42,12 @@ const ProductionPage = () => {
       toast.success('생산이 시작되었습니다');
       fetchOrders();
     } catch (error) {
-      toast.error(error.response?.data?.detail || '생산 시작에 실패했습니다');
+      console.error('생산 시작 에러:', error.response?.data);
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.non_field_errors?.[0] ||
+                          error.response?.data?.message ||
+                          '생산 시작에 실패했습니다';
+      toast.error(errorMessage);
     }
   };
 
@@ -56,7 +61,12 @@ const ProductionPage = () => {
       toast.success('생산이 완료되었습니다');
       fetchOrders();
     } catch (error) {
-      toast.error(error.response?.data?.detail || '생산 완료에 실패했습니다');
+      console.error('생산 완료 에러:', error.response?.data);
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.non_field_errors?.[0] ||
+                          error.response?.data?.message ||
+                          '생산 완료에 실패했습니다';
+      toast.error(errorMessage);
     }
   };
 

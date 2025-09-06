@@ -95,10 +95,16 @@ class ProductionService:
         if production_order.status != 'in_progress':
             raise ValidationError('진행 중인 주문만 완료할 수 있습니다.')
         
+        # produced_quantity를 숫자로 변환
+        try:
+            produced_quantity = Decimal(str(produced_quantity))
+        except (ValueError, TypeError):
+            raise ValidationError('생산량은 유효한 숫자여야 합니다.')
+        
         if produced_quantity <= 0:
             raise ValidationError('생산량은 0보다 커야 합니다.')
         
-        if produced_quantity > production_order.planned_quantity * 1.1:  # 10% 초과 방지
+        if produced_quantity > production_order.planned_quantity * Decimal('1.1'):  # 10% 초과 방지
             raise ValidationError('계획 수량을 10% 이상 초과할 수 없습니다.')
         
         # HACCP 로그 완료 확인
@@ -170,15 +176,31 @@ class ProductionService:
 
     def _calculate_required_materials(self, production_order):
         """
-        생산 주문에 필요한 원자재 계산
-        (실제로는 BOM - Bill of Materials 테이블이 필요하지만, 임시로 간단한 로직 구현)
+        생산 주문에 필요한 원자재 계산 (BOM 기반)
         """
-        # TODO: BOM 테이블 구현 후 실제 계산 로직 적용
-        # 현재는 샘플 데이터로 대체 (Decimal 연산으로 처리)
-        return {
-            f'RM-{production_order.finished_product.code}-001': production_order.planned_quantity * Decimal('0.5'),
-            f'RM-{production_order.finished_product.code}-002': production_order.planned_quantity * Decimal('0.3'),
-        }
+        from core.models import BOM
+        
+        # 해당 제품의 활성 BOM 조회
+        bom_items = BOM.objects.filter(
+            finished_product=production_order.finished_product,
+            is_active=True
+        ).select_related('raw_material')
+        
+        if not bom_items.exists():
+            raise ValidationError(
+                f'제품 "{production_order.finished_product.name}"의 BOM이 설정되지 않았습니다. '
+                f'제품 관리에서 BOM을 먼저 설정해주세요.'
+            )
+        
+        required_materials = {}
+        for bom_item in bom_items:
+            # 총 필요 수량 = 단위당 소요량 × 생산 계획 수량
+            total_required = bom_item.calculate_total_required_quantity(
+                production_order.planned_quantity
+            )
+            required_materials[bom_item.raw_material.code] = total_required
+        
+        return required_materials
 
     def _get_available_material_quantity(self, material_code):
         """지정된 원자재 코드의 가용 수량 조회 (품질검사 합격품만)"""
@@ -186,7 +208,7 @@ class ProductionService:
             material = RawMaterial.objects.get(code=material_code)
             available_lots = MaterialLot.objects.filter(
                 raw_material=material,
-                status='in_storage',
+                status__in=['in_storage', 'in_use'],  # 보관중 또는 사용중 모두 가용
                 quantity_current__gt=0,
                 quality_test_passed=True  # 품질검사 합격한 것만
             )
@@ -204,7 +226,7 @@ class ProductionService:
             material = RawMaterial.objects.get(code=material_code)
             available_lots = MaterialLot.objects.filter(
                 raw_material=material,
-                status='in_storage',
+                status__in=['in_storage', 'in_use'],  # 보관중 또는 사용중 모두 가용
                 quantity_current__gt=0,
                 quality_test_passed=True  # 품질검사 합격한 것만
             ).order_by('received_date')  # FIFO

@@ -5,6 +5,7 @@ import Header from '../components/layout/Header';
 import ProductForm from '../components/products/ProductForm';
 import ProductList from '../components/products/ProductList';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import ProductBOMManager from '../components/bom/ProductBOMManager';
 import productService from '../services/productService';
 
 const ProductsPage = () => {
@@ -12,6 +13,8 @@ const ProductsPage = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [showBOMManager, setShowBOMManager] = useState(false);
+  const [selectedProductForBOM, setSelectedProductForBOM] = useState(null);
   const [filters, setFilters] = useState({
     search: '',
     is_active: ''
@@ -91,6 +94,12 @@ const ProductsPage = () => {
     setShowForm(true);
   };
 
+  // BOM 관리 모드로 전환
+  const handleManageBOM = (product) => {
+    setSelectedProductForBOM(product);
+    setShowBOMManager(true);
+  };
+
   // 필터 변경 처리
   const handleFilterChange = (filterName, value) => {
     setFilters(prev => ({
@@ -103,6 +112,12 @@ const ProductsPage = () => {
   const handleFormCancel = () => {
     setShowForm(false);
     setEditingProduct(null);
+  };
+
+  // BOM 관리 취소 처리
+  const handleBOMManagerCancel = () => {
+    setShowBOMManager(false);
+    setSelectedProductForBOM(null);
   };
 
   return (
@@ -184,6 +199,7 @@ const ProductsPage = () => {
             products={products}
             onEdit={handleEditProduct}
             onDelete={handleDeleteProduct}
+            onManageBOM={handleManageBOM}
           />
         )}
       </div>
@@ -195,6 +211,14 @@ const ProductsPage = () => {
           onSubmit={editingProduct ? handleUpdateProduct : handleCreateProduct}
           onCancel={handleFormCancel}
           isEditing={!!editingProduct}
+        />
+      )}
+
+      {/* BOM 관리 모달 */}
+      {showBOMManager && selectedProductForBOM && (
+        <ProductBOMManager
+          product={selectedProductForBOM}
+          onClose={handleBOMManagerCancel}
         />
       )}
     </div>

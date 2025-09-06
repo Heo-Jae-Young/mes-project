@@ -61,7 +61,7 @@ class ProductionService {
       const response = await apiClient.post(`/production-orders/${orderId}/start_production/`);
       return response.data;
     } catch (error) {
-      console.error('생산 시작 실패:', error);
+      console.error('생산 시작 실패:', error.response?.data);
       throw error;
     }
   }
@@ -72,7 +72,7 @@ class ProductionService {
       const response = await apiClient.post(`/production-orders/${orderId}/complete_production/`, data);
       return response.data;
     } catch (error) {
-      console.error('생산 완료 실패:', error);
+      console.error('생산 완료 실패:', error.response?.data);
       throw error;
     }
   }
