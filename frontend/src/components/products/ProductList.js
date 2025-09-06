@@ -2,12 +2,13 @@ import {
   PencilIcon, 
   TrashIcon, 
   CheckCircleIcon,
-  XCircleIcon 
+  XCircleIcon,
+  ClipboardDocumentListIcon
 } from '@heroicons/react/24/outline';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
-const ProductList = ({ products, onEdit, onDelete }) => {
+const ProductList = ({ products, onEdit, onDelete, onManageBOM }) => {
   
   // 상태 배지 컴포넌트
   const StatusBadge = ({ isActive }) => {
@@ -152,6 +153,14 @@ const ProductList = ({ products, onEdit, onDelete }) => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center justify-end space-x-2">
+                    <button
+                      onClick={() => onManageBOM(product)}
+                      className="text-green-600 hover:text-green-900 p-1 rounded-full hover:bg-green-50 transition-colors"
+                      title="BOM 관리"
+                    >
+                      <ClipboardDocumentListIcon className="h-4 w-4" />
+                    </button>
+                    
                     <button
                       onClick={() => onEdit(product)}
                       className="text-blue-600 hover:text-blue-900 p-1 rounded-full hover:bg-blue-50 transition-colors"

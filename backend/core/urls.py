@@ -16,6 +16,7 @@ from core.views import (
     CCPLogViewSet,
     StatisticsAPIView,
 )
+from core.views.bom_views import BOMViewSet
 
 # DRF Router로 ViewSet URL 자동 생성
 router = DefaultRouter()
@@ -29,6 +30,7 @@ router.register(r'finished-products', FinishedProductViewSet, basename='finished
 router.register(r'production-orders', ProductionOrderViewSet, basename='productionorder')
 router.register(r'ccps', CCPViewSet, basename='ccp')
 router.register(r'ccp-logs', CCPLogViewSet, basename='ccplog')
+router.register(r'bom', BOMViewSet, basename='bom')
 
 urlpatterns = [
     # JWT Token endpoints
