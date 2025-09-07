@@ -105,6 +105,7 @@ npm install
 - **CCPLog:** Immutable HACCP monitoring logs
 
 **계획된 모델:**
+
 - **MaterialLotUsage:** 로트별 상세 소비 이력 (언제, 누가, 얼마나, 왜, 어떤 생산오더에서)
 
 ## Current Project Status
@@ -245,14 +246,22 @@ npm install
 
 **최우선 (현재 작업)**
 
-1. **MaterialLotUsage 모델 및 상세 소비 이력 시스템** 📝
+1. **종합적인 테스트 시스템 구축** 🧪 (포트폴리오 품질 향상)
+
+   - 백엔드: Service Layer, Repository 패턴 단위 테스트
+   - 프론트엔드: Custom Hook, 핵심 비즈니스 로직 테스트
+   - API 통합 테스트 및 E2E 테스트
+   - 90% 이상 테스트 커버리지 목표
+
+2. **MaterialLotUsage 모델 및 상세 소비 이력 시스템** 📝
+
    - MaterialLot 소비 기록을 별도 테이블로 완전 추적
    - 하이브리드 접근법: MaterialLot.quantity_current + MaterialLotUsage 이력
    - 누가, 언제, 얼마나, 왜, 어떤 생산오더에서 소비했는지 완전 기록
    - HACCP 감사 추적 (audit trail) 완벽 지원
    - 비동기 로깅으로 성능 최적화
 
-2. **HACCP 컴플라이언스 리포트** 📊
+3. **HACCP 컴플라이언스 리포트** 📊
    - CCP별 규정 준수율 대시보드 (chart.js 활용)
    - 시간대별 트렌드 차트 및 분석
    - PDF/Excel 리포트 내보내기
@@ -260,11 +269,13 @@ npm install
 **중기 목표**
 
 3. **BOM 시스템 고도화** 🔧
+
    - BOM 일괄 등록 기능 (CSV/Excel)
    - BOM 버전 관리 및 이력 추적
    - 원가 변동 추이 분석
 
 4. **실시간 알림 시스템** 🔔
+
    - WebSocket 기반 실시간 알림 (Django Channels)
    - 중요 이탈/유통기한 임박 등 즉시 알림
 
@@ -435,3 +446,21 @@ docker exec -it mes-mariadb mysql -u mes_user -p
 **⚠️ 자세한 데이터베이스 설정 및 문제 해결은 `docs/DATABASE_SETUP.md` 참고**
 
 **관리자 계정**: admin/admin123
+
+# 🧪 Testing Strategy & Plan
+
+종합적인 테스트 전략 수립을 통해 **비즈니스 로직의 정확성**, **데이터 무결성**, **HACCP 규정 준수**를 검증합니다.
+
+**📊 주요 목표**
+- Overall Coverage: 90% 이상
+- Service Layer: 95% 이상  
+- API Endpoints: 90% 이상
+- Custom Hooks: 95% 이상
+
+**📚 자세한 내용**: `backend/docs/TESTING_GUIDE.md` 참조
+
+**📋 Implementation Roadmap**
+1. **Phase 1**: Core Testing (백엔드 환경 구축, Hook 테스트)
+2. **Phase 2**: Business Logic Testing (HACCP, BOM, 재고관리)
+3. **Phase 3**: Integration & E2E (워크플로우, 페이지레벨 테스트)
+4. **Phase 4**: Advanced Testing (동시성, 보안, 부하 테스트)

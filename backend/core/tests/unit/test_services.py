@@ -134,7 +134,7 @@ class HaccpServiceTest(TestCase):
         """CCP 로그 생성 검증 성공"""
         # 예외가 발생하지 않아야 함
         self.service.validate_ccp_log_creation(
-            ccp=self.ccp,
+            ccp_id=self.ccp.id,
             measured_value=Decimal('25.0'),
             measured_at=timezone.now(),
             created_by=self.operator_user
@@ -147,13 +147,13 @@ class HaccpServiceTest(TestCase):
         
         with self.assertRaises(ValidationError) as context:
             self.service.validate_ccp_log_creation(
-                ccp=self.ccp,
+                ccp_id=self.ccp.id,
                 measured_value=Decimal('25.0'),
                 measured_at=timezone.now(),
                 created_by=self.operator_user
             )
         
-        self.assertIn('비활성 CCP', str(context.exception))
+        self.assertIn('존재하지 않거나 비활성화된 CCP입니다.', str(context.exception))
 
     def test_validate_ccp_log_creation_permission_denied(self):
         """권한 없는 사용자의 CCP 로그 생성 시도"""
@@ -161,7 +161,7 @@ class HaccpServiceTest(TestCase):
         
         with self.assertRaises(PermissionDenied):
             self.service.validate_ccp_log_creation(
-                ccp=self.ccp,
+                ccp_id=self.ccp.id,
                 measured_value=Decimal('25.0'),
                 measured_at=timezone.now(),
                 created_by=unauthorized_user
@@ -173,7 +173,7 @@ class HaccpServiceTest(TestCase):
         
         with self.assertRaises(ValidationError) as context:
             self.service.validate_ccp_log_creation(
-                ccp=self.ccp,
+                ccp_id=self.ccp.id,
                 measured_value=Decimal('25.0'),
                 measured_at=future_time,
                 created_by=self.operator_user
