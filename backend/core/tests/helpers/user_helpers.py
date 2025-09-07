@@ -11,7 +11,7 @@ def create_test_user(role='operator', **kwargs):
         'password': 'testpass123',
         'email': f'{role}_{random_num}@test.com',
         'role': role,
-        'employee_id': f'TEST_{role.upper()}_{random_num}',
+        'employee_id': f'TEST_{role.upper()[:8]}_{random_num}',
         'department': f'{role} 부서',
         'phone': '010-1234-5678'
     }
