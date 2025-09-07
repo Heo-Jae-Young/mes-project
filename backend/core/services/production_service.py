@@ -168,10 +168,10 @@ class ProductionService:
         haccp_compliance = (compliant_logs / total_ccp_logs) * 100 if total_ccp_logs > 0 else 100
         
         return {
-            'quantity_efficiency': round(quantity_efficiency, 2),
+            'quantity_efficiency': round(float(quantity_efficiency), 2),
             'time_efficiency': round(time_efficiency, 2),
             'haccp_compliance': round(haccp_compliance, 2),
-            'overall_efficiency': round((quantity_efficiency + time_efficiency + haccp_compliance) / 3, 2)
+            'overall_efficiency': round((float(quantity_efficiency) + time_efficiency + haccp_compliance) / 3, 2)
         }
 
     def _calculate_required_materials(self, production_order):
@@ -376,7 +376,7 @@ class MaterialTraceabilityService:
                 'supplier_info': {
                     'name': lot.supplier.name,
                     'code': lot.supplier.code,
-                    'contact': lot.supplier.contact_email
+                    'contact': lot.supplier.email
                 },
                 'quality_info': {
                     'test_passed': lot.quality_test_passed,

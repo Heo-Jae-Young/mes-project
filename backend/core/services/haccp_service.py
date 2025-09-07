@@ -118,7 +118,7 @@ class HaccpService:
         # 1. 기준 이탈 미조치 항목
         unresolved_deviations = CCPLog.objects.filter(
             is_within_limits=False,
-            corrective_action_taken__isnull=True,
+            corrective_action_taken__in=[None, ''],  # None 또는 빈 문자열
             measured_at__gte=timezone.now() - timedelta(hours=hours)
         ).select_related('ccp', 'production_order')
         
