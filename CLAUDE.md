@@ -280,16 +280,25 @@ npm install
    - BOM 버전 관리 및 이력 추적
    - 원가 변동 추이 분석
 
-6. **실시간 알림 시스템** 🔔
+6. **GitHub Actions CI/CD 파이프라인** 🤖
+
+   - 자동 테스트 및 코드 품질 검증
+   - main 브랜치 push 시 자동 배포
+   - Docker 이미지 빌드 및 EC2 배포 자동화
+   - 롤백 시스템 및 배포 실패 알림
+
+7. **실시간 알림 시스템** 🔔
 
    - WebSocket 기반 실시간 알림 (Django Channels)
    - 중요 이탈/유통기한 임박 등 즉시 알림
 
-7. **모바일 반응형 UI** 📱
+8. **모바일 반응형 UI** 📱
    - 태블릿/모바일 환경 최적화
    - PWA(Progressive Web App) 지원
 
-8. **배포 및 운영** ✅
+**완료된 작업:**
+
+9. **배포 및 운영** ✅
    - Docker 컨테이너화 완료 (Django, React, MariaDB, Nginx)
    - AWS EC2 프로덕션 환경 구축 완료
    - Git 기반 자동 배포 시스템 구축

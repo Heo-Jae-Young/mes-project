@@ -63,6 +63,7 @@
 **🚧 개발 중 (다음 우선순위)**
 
 - 🧪 **Frontend 테스트 시스템** - Custom Hook 및 비즈니스 로직 테스트
+- 🤖 **GitHub Actions CI/CD** - 자동 배포 및 테스트 파이프라인
 - 📈 **HACCP 컴플라이언스 리포트** - 상세 분석 및 시각화
 - 🚨 **실시간 알림 시스템** - WebSocket 기반 중요 이탈 즉시 알림
 
@@ -164,6 +165,39 @@ cat docs/AWS_EC2_DEPLOYMENT.md
 **🌐 라이브 데모**: [http://54.180.138.119](http://54.180.138.119)
 - 관리자 계정: `admin/admin123`
 - 실제 AWS EC2 환경에서 구동 중
+
+#### 🤖 GitHub Actions 자동 배포 (계획 중)
+
+다음 단계로 GitHub Actions를 통한 자동 배포 파이프라인 구축이 예정되어 있습니다:
+
+```yaml
+# .github/workflows/deploy.yml (예정)
+name: Production Deployment
+on:
+  push:
+    branches: [main]
+    
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd mes-project
+            git pull origin main
+            docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+```
+
+**CI/CD 파이프라인 구성 요소:**
+- ✅ **코드 품질 검증** - pytest + coverage 체크
+- ✅ **Docker 이미지 빌드** - 멀티스테이지 최적화  
+- 🔄 **자동 배포** - main 브랜치 push 시 EC2 배포
+- 🔄 **롤백 시스템** - 배포 실패 시 이전 버전 복구
 
 ## 🎨 주요 구현 화면
 
