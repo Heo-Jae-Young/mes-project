@@ -69,6 +69,8 @@ services:
         - REACT_APP_API_URL=${REACT_APP_API_URL}
     container_name: mes-frontend-prod
     restart: unless-stopped
+    volumes:
+      - react_build:/usr/share/nginx/html
     depends_on:
       backend:
         condition: service_healthy
@@ -89,6 +91,7 @@ services:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - static_volume:/var/www/staticfiles:ro
       - media_volume:/var/www/media:ro
+      - react_build:/usr/share/nginx/html:ro
       - certbot_certs:/etc/letsencrypt:ro
       - certbot_www:/var/www/certbot:ro
     depends_on:
@@ -126,6 +129,8 @@ volumes:
   static_volume:
     driver: local
   media_volume:
+    driver: local
+  react_build:
     driver: local
   certbot_certs:
     driver: local
