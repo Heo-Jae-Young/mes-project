@@ -629,6 +629,32 @@ docker network ls
 docker network inspect mes-production_mes-network
 ```
 
+**Django Admin CSS/JS 파일 404 오류:**
+
+Django admin 페이지에서 스타일이 깨지고 JavaScript가 작동하지 않는 경우:
+
+```bash
+# 문제: /static/ 경로가 올바르게 설정되지 않음
+# 증상: GET http://YOUR_IP/static/admin/css/base.css 404 (Not Found)
+
+# 1. collectstatic 실행 확인
+docker compose -f docker-compose.prod.yml --env-file .env.prod exec backend python manage.py collectstatic --noinput
+
+# 2. 정적 파일 볼륨 확인
+docker compose -f docker-compose.prod.yml exec nginx ls -la /var/www/staticfiles/
+
+# 3. nginx 설정에서 /static/ 경로가 올바른지 확인
+# nginx/conf.d/default.conf에서:
+# location /static/ {
+#     alias /var/www/staticfiles/;
+#     expires 1y;
+#     add_header Cache-Control "public, immutable";
+# }
+
+# 4. nginx 재시작
+docker compose -f docker-compose.prod.yml --env-file .env.prod restart nginx
+```
+
 **Nginx 설정 오류:**
 
 ```bash
