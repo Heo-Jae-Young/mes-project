@@ -2,7 +2,7 @@
 
 > 🏭 **HACCP 기반 제조 실행 시스템** - 식품 안전 규정 준수를 위한 디지털 MES 플랫폼
 
-[![Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-Planned-yellow)](https://your-demo-url.com)
+[![Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-Available-brightgreen)](http://54.180.138.119)
 [![Backend Coverage](https://img.shields.io/badge/Backend%20Coverage-78%25-green)](backend/htmlcov/index.html)
 [![Frontend Tests](https://img.shields.io/badge/Frontend%20Tests-Planned-yellow)](#testing-strategy--plan)
 [![Architecture](https://img.shields.io/badge/Architecture-Service%20Layer%20+%20Custom%20Hooks-blue)](#-주요-아키텍처-혁신)
@@ -26,6 +26,12 @@
 - 🔌 **Service Adapter 패턴** - 기존 API와 호환성 보장
 - 🎨 **컴포넌트 추상화** - 재사용 가능한 UI 패턴 구축
 
+**배포 인프라 (Docker + AWS)**
+
+- 🐳 **Docker 컨테이너화** - 멀티스테이지 빌드 및 프로덕션 최적화
+- 🌐 **Nginx 리버스 프록시** - React/Django 통합 서빙 및 정적 파일 최적화
+- 🚀 **AWS EC2 배포** - 완전 자동화된 배포 시스템 및 문서화
+
 ### 핵심 기능
 
 **✅ 구현 완료**
@@ -47,6 +53,12 @@
   - 단위 테스트: Models, Services, Serializers, Authentication
   - 통합 테스트: API 및 시리얼라이저 통합 검증
   - pytest-django + Mock을 활용한 격리된 테스트 환경
+
+- 🚀 **프로덕션 배포 시스템** - AWS EC2 Docker 기반 완전 자동화
+  - Docker Compose 프로덕션 환경 구성
+  - Nginx 리버스 프록시 및 정적 파일 최적화  
+  - Git 기반 자동 배포 및 완전한 문서화 (docs/AWS_EC2_DEPLOYMENT.md)
+  - 실제 배포 검증 완료 (신규 EC2 인스턴스 테스트)
 
 **🚧 개발 중 (다음 우선순위)**
 
@@ -80,7 +92,9 @@
 
 ## 🚀 빠른 시작
 
-### 사전 요구사항
+### 개발 환경 설정
+
+#### 사전 요구사항
 
 - Docker & Docker Compose
 - Python 3.12.7 (managed via asdf)
@@ -99,7 +113,7 @@ cp backend/.env.example backend/.env
 # .env 파일의 DATABASE_HOST, SECRET_KEY 등을 실제 값으로 수정
 
 # 3. 전체 환경 자동 시작 (MariaDB + Django + React)
-./scripts/restart_servers.sh
+./scripts/local/restart-servers.sh
 ```
 
 ### 📝 수동 설치 (문제 해결 시)
@@ -130,6 +144,26 @@ cd ../frontend && npm start
 - **백엔드 API**: http://localhost:8000/api/
 - **Swagger UI**: http://localhost:8000/api/docs/
 - **Django Admin**: http://localhost:8000/admin/ (admin/admin123)
+
+### 🚀 프로덕션 배포
+
+AWS EC2에서 Docker 기반 프로덕션 배포를 위한 완전한 가이드를 제공합니다.
+
+```bash
+# 배포 문서 확인
+cat docs/AWS_EC2_DEPLOYMENT.md
+
+# 핵심 특징:
+# - 실제 배포 경험 기반 완전한 문서화
+# - Git 기반 자동 배포 시스템
+# - Docker Compose 프로덕션 환경
+# - Nginx 리버스 프록시 및 정적 파일 최적화
+# - 단계별 상세 가이드 및 문제 해결법
+```
+
+**🌐 라이브 데모**: [http://54.180.138.119](http://54.180.138.119)
+- 관리자 계정: `admin/admin123`
+- 실제 AWS EC2 환경에서 구동 중
 
 ## 🎨 주요 구현 화면
 
