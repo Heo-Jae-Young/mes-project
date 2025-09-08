@@ -847,6 +847,52 @@ ENV SECRET_KEY=build-time-temp-key
 RUN python manage.py collectstatic --noinput --settings=mes_backend.settings
 ```
 
+## 5.6 React 정적 파일 404 오류 해결
+
+**문제**: React 앱 로딩 시 JS/CSS 파일 404 오류 발생
+
+```
+Failed to load resource: the server responded with a status of 404 (Not Found)
+main.dfb565ea.js:1
+main.58ef4f49.css:1
+```
+
+**원인**: nginx 컨테이너에서 React 빌드 파일에 접근할 수 없음
+- React 빌드 파일들이 frontend 컨테이너에만 존재
+- nginx에서 정적 파일 서빙 불가능
+
+**해결법**: docker-compose.prod.yml에 공유 volume 추가
+
+```yaml
+services:
+  frontend:
+    # ... 기존 설정
+    volumes:
+      - react_build:/usr/share/nginx/html  # 추가
+    
+  nginx:
+    # ... 기존 설정
+    volumes:
+      - react_build:/usr/share/nginx/html:ro  # 추가 (읽기 전용)
+      # ... 기존 volumes
+
+volumes:
+  react_build:          # 추가
+    driver: local
+  # ... 기존 volumes
+```
+
+**적용 방법**:
+```bash
+# 변경사항 적용을 위해 컨테이너 재시작 필요
+docker compose -f docker-compose.prod.yml --env-file .env.prod down
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+
+# 파일 공유 확인
+docker compose -f docker-compose.prod.yml --env-file .env.prod exec nginx \
+  ls -la /usr/share/nginx/html/static/
+```
+
 ## 6. 도메인 및 DNS 설정
 
 ### 6.1 도메인 구매 및 DNS 설정
