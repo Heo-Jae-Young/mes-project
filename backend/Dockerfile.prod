@@ -55,8 +55,8 @@ COPY . .
 RUN mkdir -p staticfiles media \
     && chown -R mes:mes /app
 
-# Collect static files
-RUN python manage.py collectstatic --noinput --settings=mes_backend.settings
+# Note: Static files will be collected at runtime when containers start
+# This avoids build-time dependency on environment variables
 
 # Keep as root for now (simplify local testing)
 # USER mes

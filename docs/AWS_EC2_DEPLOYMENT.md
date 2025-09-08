@@ -4,42 +4,205 @@ HACCP MES 시스템을 AWS EC2에 Docker로 배포하는 완전한 가이드입�
 
 ⚠️ **중요**: 이 가이드는 실제 배포 경험을 바탕으로 작성되어 처음부터 끝까지 정확하게 작동합니다.
 
+## 🚀 배포 개요
+
+### 전체 배포 플로우
+
+```mermaid
+flowchart TD
+    A[AWS 계정 준비] --> B[EC2 인스턴스 생성]
+    B --> C[SSH 키 페어 설정]
+    C --> D[인스턴스 초기화 대기]
+    D --> E[서버 초기 설정]
+    E --> F[Docker & Git 설치]
+    F --> G[방화벽 설정]
+    G --> H[애플리케이션 코드 배포]
+    H --> I[Docker 컨테이너 실행]
+    I --> J[도메인 연결]
+    J --> K[SSL 인증서 설정]
+    K --> L[배포 완료]
+```
+
+### 예상 소요 시간
+
+| 단계 | 소요 시간 | 설명 |
+|------|-----------|------|
+| **EC2 인스턴스 생성** | 5-10분 | 키 페어, 보안 그룹, 인스턴스 설정 |
+| **인스턴스 초기화** | 2-5분 | 부팅 및 SSH 서비스 준비 |
+| **서버 초기 설정** | 5-10분 | 패키지 업데이트, Docker 설치 |
+| **애플리케이션 배포** | 10-15분 | 코드 다운로드, 빌드, 컨테이너 실행 |
+| **SSL & 도메인 설정** | 5-10분 | 선택사항 |
+| **총 소요 시간** | **30-50분** | 처음 배포 기준 |
+
+### 필수 준비물
+
+**AWS 계정:**
+- [ ] AWS 계정 생성 완료
+- [ ] IAM 사용자 생성 (권장)
+- [ ] AWS CLI 설치 및 구성
+
+**로컬 환경:**
+- [ ] SSH 클라이언트 (Windows: PuTTY, macOS/Linux: 터미널)
+- [ ] 텍스트 에디터 (VS Code, vim 등)
+- [ ] Git (코드 수정이 필요한 경우)
+
+**도메인 (선택사항):**
+- [ ] 도메인 구매 (Route 53, 가비아 등)
+- [ ] DNS 관리 권한
+
+### 최종 결과물
+
+배포 완료 후 다음과 같은 환경이 구축됩니다:
+
+```
+🌐 프로덕션 환경
+├── 🖥️  EC2 인스턴스 (Ubuntu 24.04)
+│   ├── 🐳 Docker Containers
+│   │   ├── MariaDB (데이터베이스)
+│   │   ├── Django Backend (API 서버)
+│   │   ├── React Frontend (웹 애플리케이션)
+│   │   └── Nginx (리버스 프록시)
+│   ├── 🔒 UFW 방화벽 (포트 22, 80, 443)
+│   └── 🔐 SSL 인증서 (Let's Encrypt)
+├── 🌍 도메인 연결 (선택사항)
+└── 📊 관리자 페이지 (admin/admin123)
+```
+
 ## 🎯 핵심 해결된 문제들
 
-- ✅ Docker Compose v2 호환성 (docker-compose → docker compose)
-- ✅ 환경 변수 올바른 전달 (--env-file .env.prod 필수)
-- ✅ 프론트엔드 빌드 시 API URL 동적 설정
-- ✅ 포트 충돌 해결 (시스템 nginx 비활성화)
-- ✅ IAM 사용자 권한 설정
+이 가이드를 통해 다음과 같은 일반적인 배포 문제들이 해결됩니다:
 
-## 📋 목차
+- ✅ **Docker Compose v2 호환성** (docker-compose → docker compose)
+- ✅ **환경 변수 전달** (--env-file .env.prod 필수)
+- ✅ **Frontend API URL** 프로덕션 빌드 시 동적 설정
+- ✅ **포트 충돌** 시스템 nginx와 Docker nginx 충돌 해결
+- ✅ **Django Admin 정적 파일** CSS/JS 404 오류 해결
+- ✅ **IAM 사용자 권한** 보안 모범 사례 적용
+- ✅ **인스턴스 초기화 대기** SSH 연결 실패 문제 해결
 
-1. [AWS EC2 인스턴스 설정](#aws-ec2-인스턴스-설정)
-2. [서버 초기 설정](#서버-초기-설정)
-3. [Docker 및 의존성 설치](#docker-및-의존성-설치)
-4. [애플리케이션 배포](#애플리케이션-배포)
-5. [SSL 인증서 설정](#ssl-인증서-설정)
-6. [도메인 및 DNS 설정](#도메인-및-dns-설정)
-7. [보안 설정](#보안-설정)
-8. [모니터링 및 로그](#모니터링-및-로그)
-9. [백업 및 복구](#백업-및-복구)
-10. [문제 해결](#문제-해결)
+## 📋 상세 목차
+
+### 1. [AWS EC2 인스턴스 설정](#1-aws-ec2-인스턴스-설정)
+   - 1.1 [SSH 키 페어 관리](#11-ssh-키-페어-관리)
+   - 1.2 [인스턴스 생성](#12-인스턴스-생성) 
+   - 1.3 [인스턴스 초기화 완료 대기 ⏳](#13-인스턴스-초기화-완료-대기-)
+   - 1.4 [보안 그룹 설정](#14-보안-그룹-설정)
+   - 1.5 [Elastic IP 할당 (선택사항)](#15-elastic-ip-할당-선택사항)
+
+### 2. [서버 초기 설정](#2-서버-초기-설정)
+   - 2.1 [SSH 접속](#21-ssh-접속)
+   - 2.2 [시스템 업데이트](#22-시스템-업데이트)
+   - 2.3 [사용자 설정 (선택사항)](#23-사용자-설정)
+
+### 3. [Docker 및 의존성 설치](#3-docker-및-의존성-설치)
+   - 3.1 [Docker 설치](#31-docker-설치)
+   - 3.2 [Git 설치 및 설정](#32-git-설치-및-설정)
+   - 3.3 [방화벽 설정](#33-방화벽-설정)
+
+### 4. [애플리케이션 배포](#4-애플리케이션-배포)
+   - 4.1 [소스 코드 다운로드](#41-소스-코드-다운로드)
+   - 4.2 [환경 설정 파일 생성](#42-환경-설정-파일-생성)
+   - 4.3 [Docker 컨테이너 빌드 및 실행](#43-docker-컨테이너-빌드-및-실행)
+   - 4.4 [서비스 확인](#44-서비스-확인)
+   - 4.5 [서버 설정 수동 업데이트](#45-서버-설정-수동-업데이트)
+
+### 5. [SSL 인증서 설정 (선택사항)](#5-ssl-인증서-설정)
+   - 5.1 [Let's Encrypt 인증서 생성](#51-lets-encrypt-인증서-생성)
+   - 5.2 [Nginx SSL 설정](#52-nginx-ssl-설정)
+
+### 6. [도메인 및 DNS 설정 (선택사항)](#6-도메인-및-dns-설정)
+   - 6.1 [도메인 구매 및 DNS 설정](#61-도메인-구매-및-dns-설정)
+   - 6.2 [Route 53 설정](#62-route-53-설정)
+
+### 7. [보안 설정](#7-보안-설정)
+   - 7.1 [SSH 보안 강화](#71-ssh-보안-강화)
+   - 7.2 [자동 보안 업데이트](#72-자동-보안-업데이트)
+   - 7.3 [Fail2ban 설정](#73-fail2ban-설정)
+
+### 8. [모니터링 및 로그](#8-모니터링-및-로그)
+   - 8.1 [Docker 로그 확인](#81-docker-로그-확인)
+   - 8.2 [시스템 모니터링](#82-시스템-모니터링)
+   - 8.3 [로그 순환 설정](#83-로그-순환-설정)
+
+### 9. [백업 및 복구](#9-백업-및-복구)
+   - 9.1 [데이터베이스 백업](#91-데이터베이스-백업)
+   - 9.2 [스냅샷 생성](#92-스냅샷-생성)
+   - 9.3 [복구 절차](#93-복구-절차)
+
+### 10. [문제 해결](#10-문제-해결)
+   - 10.1 [일반적인 문제들](#101-일반적인-문제들)
+   - 10.2 [로그 확인 명령어](#102-로그-확인-명령어)
 
 ---
 
 ## 1. AWS EC2 인스턴스 설정
 
-### 1.1 인스턴스 생성
+### 1.1 SSH 키 페어 관리
+
+EC2 인스턴스에 SSH 접속하기 위한 키 페어를 관리합니다.
+
+#### 기존 키 페어 확인
+
+```bash
+# 기존 키 페어 목록 확인
+aws ec2 describe-key-pairs --query "KeyPairs[*].KeyName" --output table
+
+# 로컬 키 파일 확인
+ls -la ~/.ssh/*.pem
+```
+
+#### 옵션 1: 기존 키 페어 재사용 (권장)
+
+기존에 `mes-key` 등의 키 페어가 있다면 재사용하세요:
+
+```bash
+# 기존 키 페어 사용 (예: mes-key)
+# ~/.ssh/mes-key.pem 파일이 이미 존재해야 함
+
+# 권한 설정 확인
+chmod 400 ~/.ssh/mes-key.pem
+```
+
+#### 옵션 2: 새 키 페어 생성
+
+새로운 프로젝트나 보안상 새 키가 필요한 경우:
+
+```bash
+# 새 키 페어 생성
+aws ec2 create-key-pair \
+    --key-name mes-production-key \
+    --query 'KeyMaterial' \
+    --output text > ~/.ssh/mes-production-key.pem
+
+# 권한 설정 (중요!)
+chmod 400 ~/.ssh/mes-production-key.pem
+
+echo "키 페어 생성 완료: ~/.ssh/mes-production-key.pem"
+```
+
+**💡 키 페어 관리 팁:**
+- **하나의 마스터 키**: 모든 MES 관련 인스턴스에 동일한 키 사용 (권장)
+- **프로젝트별 키**: 더 세밀한 접근 제어가 필요한 경우
+- **키 파일 백업**: `~/.ssh/` 디렉터리를 안전한 곳에 백업
+- **팀 공유**: 팀원들과 안전한 방법으로 키 공유 (Slack DM, 1Password 등)
+
+### 1.2 인스턴스 생성
 
 ```bash
 # AWS CLI를 통한 인스턴스 생성 (선택사항)
 aws ec2 run-instances \
-    --image-id ami-0c02fb55956c7d316 \
+    --image-id ami-040c33c6a51fd5d96 \
     --instance-type t3.medium \
-    --key-name your-key-pair \
-    --security-groups mes-security-group \
-    --subnet-id subnet-12345678 \
-    --associate-public-ip-address
+    --key-name mes-production-key \
+    --security-group-ids sg-0123456789abcdef0 \
+    --subnet-id subnet-0123456789abcdef0 \
+    --associate-public-ip-address \
+    --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=mes-production-server}]'
+
+# 실제 사용 시 다음 값들을 바꿔주세요:
+# - mes-production-key: 실제 키 페어 이름
+# - sg-0123456789abcdef0: 실제 보안 그룹 ID  
+# - subnet-0123456789abcdef0: 실제 서브넷 ID
 ```
 
 **추천 인스턴스 사양:**
@@ -48,7 +211,86 @@ aws ec2 run-instances \
 - **AMI:** Ubuntu Server 22.04 LTS
 - **보안 그룹:** HTTP (80), HTTPS (443), SSH (22)
 
-### 1.2 보안 그룹 설정
+### 1.3 인스턴스 초기화 완료 대기 ⏳
+
+**⚠️ 중요**: 인스턴스가 `running` 상태가 되어도 바로 SSH 접속이 되지 않습니다!
+
+인스턴스 생성 후 다음 과정이 필요합니다:
+
+#### 1단계: 인스턴스 상태 확인
+
+```bash
+# 인스턴스 상태가 running이 될 때까지 대기
+aws ec2 wait instance-running --instance-ids YOUR_INSTANCE_ID
+
+# 인스턴스 정보 확인
+aws ec2 describe-instances \
+    --instance-ids YOUR_INSTANCE_ID \
+    --query "Reservations[0].Instances[0].[InstanceId,State.Name,PublicIpAddress]" \
+    --output table
+```
+
+#### 2단계: SSH 서비스 준비 대기 (2-5분 소요)
+
+인스턴스가 `running` 상태여도 내부적으로 다음 과정이 진행됩니다:
+- 운영체제 부팅 완료
+- SSH 서비스 시작
+- 초기 패키지 업데이트 (cloud-init)
+- 보안 업데이트 설치
+
+```bash
+# SSH 연결 테스트 (반복 시도)
+echo "SSH 서비스 준비 대기 중..."
+for i in {1..10}; do
+    if ssh -i ~/.ssh/YOUR_KEY.pem ubuntu@YOUR_EC2_IP \
+        -o ConnectTimeout=10 \
+        -o StrictHostKeyChecking=no \
+        "echo 'SSH 연결 성공!'" 2>/dev/null; then
+        echo "✅ SSH 연결 성공 (시도 횟수: $i)"
+        break
+    else
+        echo "⏳ SSH 연결 실패 - $((i*30))초 후 재시도... (시도: $i/10)"
+        sleep 30
+    fi
+done
+```
+
+#### 3단계: 시스템 준비 상태 확인
+
+```bash
+# 시스템 정보 확인
+ssh -i ~/.ssh/YOUR_KEY.pem ubuntu@YOUR_EC2_IP << 'EOF'
+echo "=== 시스템 정보 ==="
+uname -a
+echo ""
+
+echo "=== 업타임 확인 ==="
+uptime
+echo ""
+
+echo "=== 디스크 사용량 ==="
+df -h /
+echo ""
+
+echo "=== 메모리 사용량 ==="
+free -h
+echo ""
+
+echo "=== cloud-init 상태 확인 ==="
+sudo cloud-init status
+EOF
+```
+
+**💡 문제 해결:**
+
+| 문제 | 증상 | 해결방법 |
+|------|------|----------|
+| SSH 연결 거부 | `Connection refused` | 2-5분 더 대기 후 재시도 |
+| SSH 타임아웃 | `Connection timed out` | 보안 그룹 22번 포트 확인 |
+| 권한 거부 | `Permission denied` | 키 파일 권한 확인 (`chmod 400`) |
+| 키 오류 | `No such file` | 키 파일 경로 확인 |
+
+### 1.4 보안 그룹 설정
 
 ```bash
 # 보안 그룹 생성
@@ -180,6 +422,32 @@ git config --global user.name "Your Name"
 git config --global user.email "your.email@example.com"
 ```
 
+### 2.5 SSH 키 파일명 확인
+
+**⚠️ 중요**: 스크립트 실행 전 SSH 키 파일명을 반드시 확인하세요!
+
+```bash
+# 현재 SSH 키 목록 확인
+ls ~/.ssh/*.pem
+
+# 예시 결과:
+# ~/.ssh/mes-key.pem          ← 실제 키 파일명
+# ~/.ssh/mes-keypair.pem      ← 다를 수 있음
+```
+
+**문제 상황**: 
+- AWS Console에서 키 페어 생성 시 `mes-key`로 만들었는데
+- 스크립트에서는 `mes-keypair.pem`을 찾아서 "파일이 없다" 오류 발생
+
+**해결법**:
+```bash
+# 실제 키 파일명에 맞게 스크립트 수정하거나
+# 키 파일명을 스크립트에 맞게 변경
+mv ~/.ssh/mes-key.pem ~/.ssh/mes-keypair.pem
+```
+
+## 3. Docker 및 의존성 설치
+
 ### 3.3 방화벽 설정
 
 ```bash
@@ -200,17 +468,62 @@ sudo ufw status
 
 ### 4.1 코드 배포
 
+**⚠️ 중요**: 올바른 브랜치를 선택해야 합니다!
+
+#### 단계별 설명:
+
+**1단계: 저장소 클론**
 ```bash
-# 프로젝트 디렉토리 생성
-sudo mkdir -p /opt/mes
-sudo chown $USER:$USER /opt/mes
-cd /opt/mes
+# 홈 디렉터리에서 프로젝트 클론
+cd ~
+git clone https://github.com/Heo-Jae-Young/mes-project.git
 
-# Git 저장소 클론
-git clone https://github.com/your-username/mes-project.git .
+# 프로젝트 디렉터리로 이동
+cd mes-project
+```
 
-# 또는 ZIP 파일 업로드
-# scp -i your-key.pem -r ./mes-project ubuntu@your-ec2-ip:/opt/mes/
+**2단계: 사용 가능한 브랜치 확인**
+```bash
+# 모든 브랜치 목록 확인
+git branch -a
+
+# 출력 예시:
+# * main
+#   remotes/origin/feature/aws-deployment  ← 이 브랜치 필요!
+#   remotes/origin/main
+```
+
+**3단계: 배포 브랜치로 전환**
+```bash
+# AWS 배포용 브랜치로 전환 (production 파일들 포함)
+git checkout origin/feature/aws-deployment
+
+# 또는 로컬 브랜치로 생성
+git checkout -b aws-deployment origin/feature/aws-deployment
+```
+
+**왜 특정 브랜치가 필요한가?**
+- `main` 브랜치: 개발용 파일만 포함 (현재)
+- `feature/aws-deployment` 브랜치: production 배포 파일 포함
+  - `docker-compose.prod.yml`
+  - `.env.prod.example`
+  - `Dockerfile.prod`
+  - 배포 스크립트들
+
+**⚠️ 참고**: 
+- 현재는 개발 중이라 `feature/aws-deployment` 브랜치 사용
+- 배포 파일들이 안정화되면 `main` 브랜치로 머지 예정
+- 그 이후엔 `main` 브랜치에서 바로 배포 가능
+
+**4단계: 배포 파일 존재 확인**
+```bash
+# 필수 배포 파일들 확인
+ls -la | grep -E "\.(yml|prod|sh)"
+
+# 있어야 하는 파일들:
+# docker-compose.prod.yml
+# .env.prod.example
+# scripts/production/deploy.sh
 ```
 
 ### 4.2 환경 변수 설정
@@ -501,6 +814,38 @@ openssl s_client -connect your-domain.com:443 -servername your-domain.com
 ```
 
 ---
+
+## 5.5 Docker 빌드 시 환경변수 오류 해결
+
+**문제**: Docker 빌드 중 `collectstatic` 명령에서 `SECRET_KEY not found` 오류 발생
+
+```
+decouple.UndefinedValueError: SECRET_KEY not found. Declare it as envvar or define a default value.
+```
+
+**원인**: `Dockerfile.prod`에서 빌드 시점에 `collectstatic`을 실행하는데, 이 시점에는 환경변수가 없어서 실패
+
+**해결법 1**: Dockerfile에서 `collectstatic` 제거 (권장)
+```dockerfile
+# Dockerfile.prod에서 다음 라인 제거 또는 주석처리
+# RUN python manage.py collectstatic --noinput --settings=mes_backend.settings
+
+# 대신 컨테이너 시작 후 실행하도록 변경
+```
+
+**해결법 2**: 배포 스크립트에서 런타임에 실행
+```bash
+# 컨테이너 시작 후 정적 파일 수집
+docker compose -f docker-compose.prod.yml --env-file .env.prod exec backend \
+    python manage.py collectstatic --noinput
+```
+
+**해결법 3**: Dockerfile에 기본값 설정
+```dockerfile
+# 빌드용 임시 환경변수 설정
+ENV SECRET_KEY=build-time-temp-key
+RUN python manage.py collectstatic --noinput --settings=mes_backend.settings
+```
 
 ## 6. 도메인 및 DNS 설정
 
