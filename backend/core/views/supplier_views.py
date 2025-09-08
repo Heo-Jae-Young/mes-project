@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count, Q
+from django.utils import timezone
 from core.models import Supplier, MaterialLot
 from core.serializers import SupplierSerializer, SupplierCreateSerializer, SupplierUpdateSerializer
 from core.services.supplier_service import SupplierService, SupplierQueryService, SupplierAuditService
@@ -113,8 +114,8 @@ class SupplierViewSet(viewsets.ModelViewSet):
         supplier = self.get_object()
         
         # 최근 6개월간 로트 분석
-        from datetime import datetime, timedelta
-        six_months_ago = datetime.now() - timedelta(days=180)
+        from datetime import timedelta
+        six_months_ago = timezone.now() - timedelta(days=180)
         
         lots = MaterialLot.objects.filter(
             supplier=supplier,

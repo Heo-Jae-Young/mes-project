@@ -27,6 +27,10 @@ class BOMCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 'raw_material': '이미 해당 제품에 등록된 원자재입니다.'
             })
+        
+        request = self.context.get('request')
+        if not request or not hasattr(request, 'user') or not request.user.is_authenticated:
+            raise serializers.ValidationError("인증된 사용자가 필요합니다.")
             
         return attrs
     
@@ -36,9 +40,7 @@ class BOMCreateSerializer(serializers.ModelSerializer):
         return value
     
     def create(self, validated_data):
-        request = self.context.get('request')
-        if request and hasattr(request, 'user'):
-            validated_data['created_by'] = request.user
+        validated_data['created_by'] = self.context['request'].user
         return super().create(validated_data)
 
 

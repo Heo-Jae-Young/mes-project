@@ -28,6 +28,9 @@ class UserCreateSerializer(serializers.ModelSerializer):
             'username', 'email', 'first_name', 'last_name', 'password', 'password_confirm',
             'role', 'employee_id', 'department', 'phone'
         ]
+        extra_kwargs = {
+            'email': {'required': True, 'allow_blank': False}
+        }
         
     def validate(self, attrs):
         if attrs['password'] != attrs['password_confirm']:

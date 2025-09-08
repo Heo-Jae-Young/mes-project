@@ -210,8 +210,8 @@ class CCPLogCreateSerializer(serializers.ModelSerializer):
 class CCPLogUpdateSerializer(serializers.ModelSerializer):
     """CCP 로그 수정용 Serializer - 개선조치 정보만 수정 가능"""
     
-    corrective_action_by_id = serializers.UUIDField(write_only=True, required=False, allow_null=True)
-    verified_by_id = serializers.UUIDField(write_only=True, required=False, allow_null=True)
+    corrective_action_by_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
+    verified_by_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
     
     class Meta:
         model = CCPLog

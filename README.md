@@ -3,7 +3,7 @@
 > 🏭 **HACCP 기반 제조 실행 시스템** - 식품 안전 규정 준수를 위한 디지털 MES 플랫폼
 
 [![Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-Planned-yellow)](https://your-demo-url.com)
-[![Backend Coverage](https://img.shields.io/badge/Backend%20Coverage-43.76%25-green)](backend/htmlcov/index.html)
+[![Backend Coverage](https://img.shields.io/badge/Backend%20Coverage-78%25-green)](backend/htmlcov/index.html)
 [![Frontend Tests](https://img.shields.io/badge/Frontend%20Tests-Planned-yellow)](#testing-strategy--plan)
 [![Architecture](https://img.shields.io/badge/Architecture-Service%20Layer%20+%20Custom%20Hooks-blue)](#-주요-아키텍처-혁신)
 
@@ -43,7 +43,10 @@
 - 🏢 **공급업체 관리 시스템** - 공급업체 CRUD, 상세 페이지, 성과 지표, 검색/필터링
 - 🎨 **일관된 UI/UX** - LoadingCard 컴포넌트, 통일된 테이블 스타일, 개선된 로딩 경험
 
-- 🧪 **종합 테스트 시스템** - Service Layer 111개 테스트, 98% 커버리지 달성
+- 🧪 **종합 테스트 시스템** - 78% 커버리지 달성 (265 tests passed)
+  - 단위 테스트: Models, Services, Serializers, Authentication
+  - 통합 테스트: API 및 시리얼라이저 통합 검증
+  - pytest-django + Mock을 활용한 격리된 테스트 환경
 
 **🚧 개발 중 (다음 우선순위)**
 
@@ -60,7 +63,7 @@
 - MariaDB (Docker container)
 - Python 3.12.7
 - Service Layer Architecture
-- 111개 단위 테스트 (pytest-django) - Service Layer 완전 커버리지
+- 265개 단위/통합 테스트 (pytest-django) - 78% 커버리지
 
 **Frontend:**
 
@@ -243,12 +246,10 @@ mes-project/
 - [x] **원자재 관리 API**: 입고/재고/유통기한 관리 시스템
 - [x] **제품 관리 API**: 완제품 CRUD, 영양성분/알러지 정보 관리
 - [x] **BOM 원가 계산 API**: FIFO 기반 실시간 원가 계산, 가격 산출 우선순위 알고리즘
-- [x] **종합 테스트 시스템**: Service Layer 111개 테스트, 평균 95% 커버리지
-  - [x] HACCP Service: 20개 테스트 (93% 커버리지)
-  - [x] Production Service: 26개 테스트 (89% 커버리지)  
-  - [x] User Service: 20개 테스트 (100% 커버리지)
-  - [x] Supplier Service: 33개 테스트 (98% 커버리지)
-  - [x] Cost Calculation Service: 12개 테스트 (89% 커버리지)
+- [x] **종합 테스트 시스템**: 265개 테스트, 78% 커버리지 달성
+  - [x] 단위 테스트: Models, Services, Serializers, Authentication
+  - [x] 통합 테스트: API 엔드포인트 및 시리얼라이저 검증
+  - [x] Mock을 활용한 격리된 테스트 환경 구축
 - [x] API 문서화 (Swagger UI)
 - [x] 아키텍처 개선: 레이어별 책임 분리, 중복 코드 제거
 

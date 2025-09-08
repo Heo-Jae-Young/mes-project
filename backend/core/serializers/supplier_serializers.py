@@ -34,11 +34,16 @@ class SupplierCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("이미 존재하는 공급업체 코드입니다.")
         return value
     
+    def validate(self, data):
+        """요청에 인증된 사용자가 있는지 확인합니다."""
+        request = self.context.get('request')
+        if not request or not hasattr(request, 'user') or not request.user.is_authenticated:
+            raise serializers.ValidationError("인증된 사용자가 필요합니다.")
+        return data
+
     def create(self, validated_data):
         """생성자 정보 자동 설정"""
-        request = self.context.get('request')
-        if request and hasattr(request, 'user'):
-            validated_data['created_by'] = request.user
+        validated_data['created_by'] = self.context['request'].user
         return super().create(validated_data)
 
 
