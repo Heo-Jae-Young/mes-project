@@ -234,41 +234,54 @@ npm install
 
 ### 📋 Planned Features
 
-**최우선 (현재 작업)**
+**🚨 최우선 (급한 작업)**
 
-1. **MaterialLotUsage 모델 및 상세 소비 이력 시스템** 📝
+1. **Views 테스트 시스템 구축** 🧪
+
+   - API 엔드포인트 안정성 확보 (현재 27-42% 커버리지)
+   - ViewSets별 단위 테스트: CRUD 동작, 권한 검증, 에러 처리
+   - API 클라이언트 테스트 (APIClient, 인증 토큰)
+   - 비즈니스 로직 검증: FIFO 할당, CCP 이탈 감지 등
+
+2. **Frontend 테스트 시스템 구축** ⚛️
+
+   - React 컴포넌트 테스트 (React Testing Library)
+   - Custom Hook 테스트 (useEntityPage, useAuth 등)
+   - API 연동 테스트 (Mock Service Worker)
+   - 사용자 시나리오 테스트 (E2E)
+
+**중기 목표 (안정성 확보 후)**
+
+3. **MaterialLotUsage 모델 및 상세 소비 이력 시스템** 📝
 
    - MaterialLot 소비 기록을 별도 테이블로 완전 추적
    - 하이브리드 접근법: MaterialLot.quantity_current + MaterialLotUsage 이력
    - 누가, 언제, 얼마나, 왜, 어떤 생산오더에서 소비했는지 완전 기록
    - HACCP 감사 추적 (audit trail) 완벽 지원
-   - 비동기 로깅으로 성능 최적화
 
-2. **HACCP 컴플라이언스 리포트** 📊
+4. **HACCP 컴플라이언스 리포트** 📊
    - CCP별 규정 준수율 대시보드 (chart.js 활용)
    - 시간대별 트렌드 차트 및 분석
    - PDF/Excel 리포트 내보내기
 
-**중기 목표**
+**장기 목표**
 
-3. **BOM 시스템 고도화** 🔧
+5. **BOM 시스템 고도화** 🔧
 
    - BOM 일괄 등록 기능 (CSV/Excel)
    - BOM 버전 관리 및 이력 추적
    - 원가 변동 추이 분석
 
-4. **실시간 알림 시스템** 🔔
+6. **실시간 알림 시스템** 🔔
 
    - WebSocket 기반 실시간 알림 (Django Channels)
    - 중요 이탈/유통기한 임박 등 즉시 알림
 
-5. **모바일 반응형 UI** 📱
+7. **모바일 반응형 UI** 📱
    - 태블릿/모바일 환경 최적화
    - PWA(Progressive Web App) 지원
 
-**장기 목표**
-
-6. **배포 및 운영** 🚀
+8. **배포 및 운영** 🚀
    - Docker 컨테이너화 (Django, React, MariaDB)
    - Nginx 프로덕션 환경 구성
    - 클라우드 배포 (AWS/DigitalOcean)
