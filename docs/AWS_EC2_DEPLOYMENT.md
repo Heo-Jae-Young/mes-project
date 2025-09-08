@@ -306,6 +306,100 @@ curl -X POST http://YOUR_EC2_IP/api/token/ \
 curl http://YOUR_EC2_IP
 ```
 
+### 4.5 서버 설정 수동 업데이트
+
+로컬에서 설정 파일을 수정한 후 서버에 반영하는 방법:
+
+#### 4.5.1 설정 파일 전송
+
+```bash
+# nginx 설정 파일 업데이트
+scp -i ~/.ssh/mes-keypair.pem ./nginx/nginx.conf ubuntu@YOUR_EC2_IP:~/mes-project/nginx/
+scp -i ~/.ssh/mes-keypair.pem ./nginx/conf.d/default.conf ubuntu@YOUR_EC2_IP:~/mes-project/nginx/conf.d/
+
+# Docker Compose 파일 업데이트
+scp -i ~/.ssh/mes-keypair.pem ./docker-compose.prod.yml ubuntu@YOUR_EC2_IP:~/mes-project/
+
+# 백엔드 설정 파일 업데이트
+scp -i ~/.ssh/mes-keypair.pem -r ./backend/Dockerfile.prod ubuntu@YOUR_EC2_IP:~/mes-project/backend/
+
+# 프론트엔드 설정 파일 업데이트
+scp -i ~/.ssh/mes-keypair.pem -r ./frontend/Dockerfile.prod ubuntu@YOUR_EC2_IP:~/mes-project/frontend/
+```
+
+#### 4.5.2 서버에서 설정 적용
+
+```bash
+# 1. 서버 접속
+ssh -i ~/.ssh/mes-keypair.pem ubuntu@YOUR_EC2_IP
+cd mes-project
+
+# 2. 설정 변경만 적용 (빠른 방법)
+# nginx 설정만 변경된 경우
+docker compose -f docker-compose.prod.yml --env-file .env.prod restart nginx
+
+# 환경변수만 변경된 경우
+docker compose -f docker-compose.prod.yml --env-file .env.prod restart
+
+# 3. 코드 변경사항 적용 (재빌드 필요)
+# 백엔드 코드 변경된 경우
+docker compose -f docker-compose.prod.yml --env-file .env.prod build --no-cache backend
+docker compose -f docker-compose.prod.yml --env-file .env.prod restart backend
+
+# 프론트엔드 코드 변경된 경우
+docker compose -f docker-compose.prod.yml --env-file .env.prod build --no-cache frontend
+docker compose -f docker-compose.prod.yml --env-file .env.prod restart frontend
+
+# 4. 전체 재시작 (안전한 방법)
+docker compose -f docker-compose.prod.yml --env-file .env.prod down
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+
+# 5. 정적 파일 재수집 (Django static files)
+docker compose -f docker-compose.prod.yml --env-file .env.prod exec backend python manage.py collectstatic --noinput
+```
+
+#### 4.5.3 업데이트 확인
+
+```bash
+# 서비스 상태 확인
+docker compose -f docker-compose.prod.yml --env-file .env.prod ps
+
+# 로그 확인
+docker compose -f docker-compose.prod.yml --env-file .env.prod logs -f
+
+# 특정 서비스 로그만 확인
+docker compose -f docker-compose.prod.yml --env-file .env.prod logs backend
+docker compose -f docker-compose.prod.yml --env-file .env.prod logs frontend  
+docker compose -f docker-compose.prod.yml --env-file .env.prod logs nginx
+
+# nginx 설정 검증
+docker compose -f docker-compose.prod.yml exec nginx nginx -t
+```
+
+#### 4.5.4 일괄 업데이트 스크립트
+
+반복적인 배포를 위한 간편 스크립트:
+
+```bash
+# 로컬에서 실행 (update-server.sh)
+#!/bin/bash
+EC2_IP="YOUR_EC2_IP"
+KEY_PATH="~/.ssh/mes-keypair.pem"
+
+echo "📤 설정 파일 전송 중..."
+scp -i $KEY_PATH ./nginx/conf.d/default.conf ubuntu@$EC2_IP:~/mes-project/nginx/conf.d/
+scp -i $KEY_PATH ./docker-compose.prod.yml ubuntu@$EC2_IP:~/mes-project/
+
+echo "🔄 서버에서 서비스 재시작 중..."
+ssh -i $KEY_PATH ubuntu@$EC2_IP << 'EOF'
+cd mes-project
+docker compose -f docker-compose.prod.yml --env-file .env.prod restart nginx
+docker compose -f docker-compose.prod.yml --env-file .env.prod ps
+EOF
+
+echo "✅ 업데이트 완료!"
+```
+
 ## 🔧 문제 해결 가이드
 
 ### 1. 프론트엔드가 localhost로 API 요청하는 경우
