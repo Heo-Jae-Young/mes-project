@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from core.models import FinishedProduct
 from .user_serializers import UserSerializer
+from core.services.cost_calculation_service import CostCalculationService
 
 
 class FinishedProductSerializer(serializers.ModelSerializer):
@@ -32,7 +33,6 @@ class FinishedProductSerializer(serializers.ModelSerializer):
     def get_estimated_unit_cost(self, obj):
         """예상 단위 원가 계산"""
         try:
-            from ..services.cost_calculation_service import CostCalculationService
             cost_info = CostCalculationService.calculate_product_cost(str(obj.id))
             return str(cost_info['unit_cost'])
         except Exception:
@@ -41,7 +41,6 @@ class FinishedProductSerializer(serializers.ModelSerializer):
     def get_cost_calculation_status(self, obj):
         """원가 계산 상태 정보"""
         try:
-            from ..services.cost_calculation_service import CostCalculationService
             cost_info = CostCalculationService.calculate_product_cost(str(obj.id))
             return {
                 'bom_missing': cost_info['bom_missing'],

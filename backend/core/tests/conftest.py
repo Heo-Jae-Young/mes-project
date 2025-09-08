@@ -8,7 +8,9 @@ from core.tests.helpers.user_helpers import (
 )
 from core.tests.helpers.auth_helpers import create_authenticated_client
 from core.tests.helpers.haccp_helpers import create_test_ccp, create_test_ccp_log
-from core.tests.helpers.supplier_helpers import create_test_supplier
+from core.tests.helpers.supplier_helpers import create_test_supplier, create_test_raw_material, create_test_material_lot
+from core.tests.helpers.production_helpers import create_test_finished_product, create_test_production_order
+from core.tests.helpers.bom_helpers import create_test_bom
 
 
 # ================================
@@ -126,7 +128,7 @@ def temperature_ccp():
 @pytest.fixture
 def test_ccp_log(test_ccp, operator_user):
     """기본 테스트 CCP 로그"""
-    return create_test_ccp_log(ccp=test_ccp, recorded_by=operator_user)
+    return create_test_ccp_log(ccp=test_ccp, created_by=operator_user)
 
 
 # ================================
@@ -186,3 +188,55 @@ def supplier_with_rating(request):
     from core.tests.helpers.supplier_helpers import create_supplier_with_rating
     rating = request.param
     return create_supplier_with_rating(rating=rating)
+
+
+# ================================
+# Product & Production Fixtures
+# ================================
+
+@pytest.fixture
+def test_finished_product():
+    """기본 테스트 완제품"""
+    return create_test_finished_product()
+
+
+@pytest.fixture
+def test_product():
+    """기본 테스트 완제품 (alias for compatibility)"""
+    return create_test_finished_product()
+
+
+@pytest.fixture
+def test_production_order(test_product):
+    """기본 테스트 생산오더"""
+    return create_test_production_order(finished_product=test_product)
+
+
+# ================================
+# Raw Material Fixtures
+# ================================
+
+@pytest.fixture
+def test_raw_material():
+    """기본 테스트 원자재"""
+    return create_test_raw_material()
+
+
+@pytest.fixture
+def test_material_lot(test_raw_material):
+    """기본 테스트 원자재 로트"""
+    return create_test_material_lot(raw_material=test_raw_material)
+
+
+# ================================
+# BOM Fixtures
+# ================================
+
+@pytest.fixture
+def test_bom(test_finished_product, test_raw_material, test_user):
+    """기본 테스트 BOM"""
+    return create_test_bom(
+        finished_product=test_finished_product,
+        raw_material=test_raw_material,
+        created_by=test_user
+    )

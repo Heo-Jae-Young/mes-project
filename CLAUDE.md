@@ -6,28 +6,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 HACCP 기반 식품 안전 규정 준수 MES (Manufacturing Execution System) SaaS 프로젝트. Django REST Framework와 React를 사용한 풀스택 웹 애플리케이션.
 
-## Technology Stack
-
-**Backend:**
-
-- Django 5.2.5 + Django REST Framework 3.16
-- JWT Authentication (djangorestframework-simplejwt)
-- MariaDB (Docker container)
-- Python 3.12.7
-- Testing: pytest-django + pytest-cov
-
-**Frontend:**
-
-- React 18+
-- Axios for API communication
-- Tailwind CSS
-- React Router DOM
-
-**Infrastructure:**
-
-- Docker Compose for development
-- Nginx for production (planned)
-
 ## Development Setup
 
 ### Prerequisites
@@ -237,6 +215,18 @@ npm install
 - 모든 테이블 스타일 통일 (일관된 테두리, 배경, 그림자)
 - BOM 알림 UX 개선 (검색과 독립적인 전역 알림)
 
+**Comprehensive Testing System** ✅
+
+- 도메인별 모델 테스트 시스템 (PR #19)
+- Service Layer 종합 테스트 시스템 (PR #20)
+- Serializer 단위 테스트 시스템 (PR #21)
+- 78% 테스트 커버리지 달성
+- pytest-django + pytest-cov 테스트 프레임워크
+- 단위 테스트, 통합 테스트, 모킹 시스템 완료
+- HACCP 비즈니스 로직 검증 테스트
+- BOM 테스트 픽스처 및 헬퍼 함수 완료
+- Timezone RuntimeWarning 문제 해결
+
 ### ⚠️ Current Limitations
 
 - **BOM 고급 기능 미구현**: BOM 일괄 등록, 버전 관리 등
@@ -246,14 +236,7 @@ npm install
 
 **최우선 (현재 작업)**
 
-1. **종합적인 테스트 시스템 구축** 🧪 (포트폴리오 품질 향상)
-
-   - 백엔드: Service Layer, Repository 패턴 단위 테스트
-   - 프론트엔드: Custom Hook, 핵심 비즈니스 로직 테스트
-   - API 통합 테스트 및 E2E 테스트
-   - 90% 이상 테스트 커버리지 목표
-
-2. **MaterialLotUsage 모델 및 상세 소비 이력 시스템** 📝
+1. **MaterialLotUsage 모델 및 상세 소비 이력 시스템** 📝
 
    - MaterialLot 소비 기록을 별도 테이블로 완전 추적
    - 하이브리드 접근법: MaterialLot.quantity_current + MaterialLotUsage 이력
@@ -261,7 +244,7 @@ npm install
    - HACCP 감사 추적 (audit trail) 완벽 지원
    - 비동기 로깅으로 성능 최적화
 
-3. **HACCP 컴플라이언스 리포트** 📊
+2. **HACCP 컴플라이언스 리포트** 📊
    - CCP별 규정 준수율 대시보드 (chart.js 활용)
    - 시간대별 트렌드 차트 및 분석
    - PDF/Excel 리포트 내보내기
@@ -419,13 +402,20 @@ lsof -t -i :3000 | xargs kill -9  # 프론트엔드 포트
 
 ```bash
 # 전체 테스트 실행
-pytest -v
+pytest backend -v
 
 # 단위테스트만 실행
-pytest -m "unit" -v
+pytest backend -m "unit" -v
 
-# 커버리지 리포트
-pytest --cov=core --cov-report=html
+# 통합테스트만 실행
+pytest backend -m "integration" -v
+
+# 커버리지 리포트 (HTML)
+pytest backend --cov=core --cov-report=html
+
+# 커버리지 리포트 (터미널)
+pytest backend --cov=core --cov-report=term-missing
+
 ```
 
 ### Database Management
@@ -446,21 +436,3 @@ docker exec -it mes-mariadb mysql -u mes_user -p
 **⚠️ 자세한 데이터베이스 설정 및 문제 해결은 `docs/DATABASE_SETUP.md` 참고**
 
 **관리자 계정**: admin/admin123
-
-# 🧪 Testing Strategy & Plan
-
-종합적인 테스트 전략 수립을 통해 **비즈니스 로직의 정확성**, **데이터 무결성**, **HACCP 규정 준수**를 검증합니다.
-
-**📊 주요 목표**
-- Overall Coverage: 90% 이상
-- Service Layer: 95% 이상  
-- API Endpoints: 90% 이상
-- Custom Hooks: 95% 이상
-
-**📚 자세한 내용**: `backend/docs/TESTING_GUIDE.md` 참조
-
-**📋 Implementation Roadmap**
-1. **Phase 1**: Core Testing (백엔드 환경 구축, Hook 테스트)
-2. **Phase 2**: Business Logic Testing (HACCP, BOM, 재고관리)
-3. **Phase 3**: Integration & E2E (워크플로우, 페이지레벨 테스트)
-4. **Phase 4**: Advanced Testing (동시성, 보안, 부하 테스트)

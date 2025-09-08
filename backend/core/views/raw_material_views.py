@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Sum, Count, Q
+from django.utils import timezone
 from datetime import datetime, timedelta, date
 from core.models import RawMaterial, MaterialLot
 from core.serializers import RawMaterialSerializer, RawMaterialCreateSerializer, MaterialLotSerializer, MaterialLotCreateSerializer
@@ -286,7 +287,7 @@ class MaterialLotViewSet(viewsets.ModelViewSet):
     def quality_summary(self, request):
         """품질검사 요약"""
         # 최근 30일 품질검사 현황
-        thirty_days_ago = datetime.now() - timedelta(days=30)
+        thirty_days_ago = timezone.now() - timedelta(days=30)
         
         recent_lots = MaterialLot.objects.filter(
             received_date__gte=thirty_days_ago

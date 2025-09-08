@@ -60,7 +60,7 @@ class ProductionOrderCreateSerializer(serializers.ModelSerializer):
     """생산오더 생성용 Serializer"""
     
     finished_product_id = serializers.UUIDField(write_only=True)
-    assigned_operator_id = serializers.UUIDField(write_only=True, required=False, allow_null=True)
+    assigned_operator_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
     
     class Meta:
         model = ProductionOrder
@@ -116,7 +116,7 @@ class ProductionOrderCreateSerializer(serializers.ModelSerializer):
 class ProductionOrderUpdateSerializer(serializers.ModelSerializer):
     """생산오더 수정용 Serializer"""
     
-    assigned_operator_id = serializers.UUIDField(write_only=True, required=False, allow_null=True)
+    assigned_operator_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
     
     class Meta:
         model = ProductionOrder

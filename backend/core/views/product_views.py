@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count, Q
+from django.utils import timezone
 from core.models import FinishedProduct, ProductionOrder
 from core.serializers import FinishedProductSerializer, FinishedProductCreateSerializer, FinishedProductUpdateSerializer
 
@@ -101,8 +102,8 @@ class FinishedProductViewSet(viewsets.ModelViewSet):
             status_distribution[status_name] = count
         
         # 최근 30일 생산 성과
-        from datetime import datetime, timedelta
-        thirty_days_ago = datetime.now() - timedelta(days=30)
+        from datetime import timedelta
+        thirty_days_ago = timezone.now() - timedelta(days=30)
         recent_orders = all_orders.filter(created_at__gte=thirty_days_ago)
         
         recent_produced = sum([order.produced_quantity for order in recent_orders])
@@ -141,7 +142,7 @@ class FinishedProductViewSet(viewsets.ModelViewSet):
         for ccp in ccps:
             # 최근 로그 통계
             recent_logs = ccp.logs.filter(
-                measured_at__gte=datetime.now() - timedelta(days=30)
+                measured_at__gte=timezone.now() - timedelta(days=30)
             )
             
             ccp_data.append({
