@@ -258,47 +258,74 @@ npm install
    - API 연동 테스트 (Mock Service Worker)
    - 사용자 시나리오 테스트 (E2E)
 
-**중기 목표 (안정성 확보 후)**
+**Phase 1: 최우선 (테스트 및 기본 CI/CD)**
 
-3. **MaterialLotUsage 모델 및 상세 소비 이력 시스템** 📝
+3. **Frontend 테스트 시스템 구축** ⚛️
 
-   - MaterialLot 소비 기록을 별도 테이블로 완전 추적
-   - 하이브리드 접근법: MaterialLot.quantity_current + MaterialLotUsage 이력
-   - 누가, 언제, 얼마나, 왜, 어떤 생산오더에서 소비했는지 완전 기록
-   - HACCP 감사 추적 (audit trail) 완벽 지원
+   - React 컴포넌트 테스트 (React Testing Library)
+   - Custom Hook 테스트 (useEntityPage, useAuth 등)
+   - API 연동 테스트 (Mock Service Worker)
+   - 사용자 시나리오 테스트 (E2E)
 
-4. **HACCP 컴플라이언스 리포트** 📊
-   - CCP별 규정 준수율 대시보드 (chart.js 활용)
-   - 시간대별 트렌드 차트 및 분석
-   - PDF/Excel 리포트 내보내기
-
-**장기 목표**
-
-5. **BOM 시스템 고도화** 🔧
-
-   - BOM 일괄 등록 기능 (CSV/Excel)
-   - BOM 버전 관리 및 이력 추적
-   - 원가 변동 추이 분석
-
-6. **GitHub Actions CI/CD 파이프라인** 🤖
+4. **GitHub Actions CI/CD 파이프라인** 🤖
 
    - 자동 테스트 및 코드 품질 검증
    - main 브랜치 push 시 자동 배포
    - Docker 이미지 빌드 및 EC2 배포 자동화
    - 롤백 시스템 및 배포 실패 알림
 
-7. **실시간 알림 시스템** 🔔
+**Phase 2: 단기 목표 (배포 시스템 고도화)**
 
-   - WebSocket 기반 실시간 알림 (Django Channels)
-   - 중요 이탈/유통기한 임박 등 즉시 알림
+5. **무중단 배포 시스템** 🔄
 
-8. **모바일 반응형 UI** 📱
-   - 태블릿/모바일 환경 최적화
-   - PWA(Progressive Web App) 지원
+   - Rolling Update 배포 방식 도입
+   - 헬스체크 기반 자동 롤백
+   - Blue-Green 배포 고려
+
+6. **배포 모니터링 & 알림** 📊
+
+   - Slack/Discord 배포 알림 연동
+   - 배포 이력 대시보드
+   - 성능 모니터링 (응답시간, 에러율)
+
+**Phase 3: 중장기 목표 (기능 확장 및 인프라)**
+
+7. **MaterialLotUsage 모델 및 상세 소비 이력 시스템** 📝
+
+   - MaterialLot 소비 기록을 별도 테이블로 완전 추적
+   - 하이브리드 접근법: MaterialLot.quantity_current + MaterialLotUsage 이력
+   - 누가, 언제, 얼마나, 왜, 어떤 생산오더에서 소비했는지 완전 기록
+   - HACCP 감사 추적 (audit trail) 완벽 지원
+
+8. **HACCP 컴플라이언스 리포트** 📊
+   - CCP별 규정 준수율 대시보드 (chart.js 활용)
+   - 시간대별 트렌드 차트 및 분석
+   - PDF/Excel 리포트 내보내기
+
+9. **BOM 시스템 고도화** 🔧
+
+   - BOM 일괄 등록 기능 (CSV/Excel)
+   - BOM 버전 관리 및 이력 추적
+   - 원가 변동 추이 분석
+
+10. **실시간 알림 시스템** 🔔
+
+    - WebSocket 기반 실시간 알림 (Django Channels)
+    - 중요 이탈/유통기한 임박 등 즉시 알림
+
+11. **인프라 자동화 (IaC)** 🏗️
+
+    - Terraform으로 AWS 인프라 코드화
+    - 환경별 배포 (dev → staging → production)
+    - Docker 이미지 보안 스캔 자동화
+
+12. **모바일 반응형 UI** 📱
+    - 태블릿/모바일 환경 최적화
+    - PWA(Progressive Web App) 지원
 
 **완료된 작업:**
 
-9. **배포 및 운영** ✅
+13. **배포 및 운영** ✅
    - Docker 컨테이너화 완료 (Django, React, MariaDB, Nginx)
    - AWS EC2 프로덕션 환경 구축 완료
    - Git 기반 자동 배포 시스템 구축

@@ -60,12 +60,21 @@
   - Git 기반 자동 배포 및 완전한 문서화 (docs/AWS_EC2_DEPLOYMENT.md)
   - 실제 배포 검증 완료 (신규 EC2 인스턴스 테스트)
 
-**🚧 개발 중 (다음 우선순위)**
+**🚧 개발 중 (우선순위별)**
 
-- 🧪 **Frontend 테스트 시스템** - Custom Hook 및 비즈니스 로직 테스트
+**🔥 최우선 (Phase 1)**
+- 🧪 **Frontend 테스트 시스템** - Custom Hook 및 비즈니스 로직 테스트  
 - 🤖 **GitHub Actions CI/CD** - 자동 배포 및 테스트 파이프라인
+
+**⚡ 단기 목표 (Phase 2)**
+- 🔄 **무중단 배포** - Rolling Update 및 자동 롤백
+- 🔔 **배포 알림 시스템** - Slack/Discord 연동
+- 📊 **배포 모니터링** - 성능 및 상태 추적
+
+**🚀 중장기 목표 (Phase 3)**  
 - 📈 **HACCP 컴플라이언스 리포트** - 상세 분석 및 시각화
 - 🚨 **실시간 알림 시스템** - WebSocket 기반 중요 이탈 즉시 알림
+- 🏗️ **인프라 자동화** - Terraform 기반 IaC
 
 ## 🛠 기술 스택
 
@@ -198,6 +207,30 @@ jobs:
 - ✅ **Docker 이미지 빌드** - 멀티스테이지 최적화  
 - 🔄 **자동 배포** - main 브랜치 push 시 EC2 배포
 - 🔄 **롤백 시스템** - 배포 실패 시 이전 버전 복구
+
+#### 🚀 고도화 배포 시스템 (장기 계획)
+
+**Phase 2: 무중단 배포 & 모니터링**
+```yaml
+# 무중단 롤링 배포
+strategy:
+  type: RollingUpdate
+  maxUnavailable: 0
+  maxSurge: 1
+
+# 배포 후 헬스체크 & 자동 롤백
+healthcheck:
+  timeout: 30s
+  retries: 3
+  rollback_on_failure: true
+```
+
+**Phase 3: 엔터프라이즈급 배포**
+- 🎯 **환경별 배포**: dev → staging → production
+- 🔔 **Slack 알림**: 배포 상태 실시간 알림  
+- 📊 **배포 대시보드**: 배포 이력 및 성능 모니터링
+- 🛡️ **보안 스캔**: Docker 이미지 취약점 자동 검사
+- 🏗️ **IaC (Terraform)**: 인프라도 코드로 관리
 
 ## 🎨 주요 구현 화면
 
