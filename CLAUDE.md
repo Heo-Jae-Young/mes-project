@@ -39,7 +39,7 @@ cd ../frontend
 npm install
 
 # 6. Start both servers
-./scripts/restart_servers.sh
+./scripts/local/restart-servers.sh
 ```
 
 ### Detailed Setup Guide
@@ -388,13 +388,13 @@ DATABASE_PORT=3306
 
 ```bash
 # 서버 재시작 (백엔드 + 프론트엔드)
-./scripts/restart_servers.sh
+./scripts/local/restart-servers.sh
 
 # 서버 중지
-./scripts/stop_servers.sh
+./scripts/local/stop-servers.sh
 
 # 서버 상태 확인
-./scripts/check_servers.sh
+./scripts/local/check-servers.sh
 ```
 
 #### 수동 실행
