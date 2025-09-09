@@ -127,7 +127,7 @@ jobs:
           # 배포 결과 확인
           if docker compose -f docker-compose.prod.yml --env-file .env.prod ps | grep -q "Up\|healthy"; then
             echo "✅ Deployment successful!"
-            curl -f http://localhost/api/health/ > /dev/null && echo "✅ API is responding"
+            docker exec mes-backend-prod curl -f http://localhost:8000/api/health/ > /dev/null && echo "✅ API is responding"
           else
             echo "❌ Deployment failed"
             exit 1
