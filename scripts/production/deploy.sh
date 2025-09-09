@@ -121,9 +121,49 @@ deploy() {
     print_status "Setting up database..."
     docker compose -f docker-compose.prod.yml --env-file .env.prod exec -T backend python manage.py migrate
     
-    # 시드 데이터 사용 (관리자 계정 포함)
-    print_status "Loading seed data (includes admin user)..."
-    docker compose -f docker-compose.prod.yml --env-file .env.prod exec -T backend python manage.py seed_data --clear
+    # 안전한 데이터베이스 초기화 (볼륨 기반 감지)
+    print_status "Checking database initialization status..."
+    
+    # Docker 볼륨에서 실제 데이터 존재 여부 확인
+    if docker compose -f docker-compose.prod.yml --env-file .env.prod exec -T backend python manage.py shell -c "
+from django.contrib.auth import get_user_model
+from core.models import RawMaterial, FinishedProduct, Supplier
+User = get_user_model()
+
+# 핵심 데이터가 모두 존재하는지 확인
+user_count = User.objects.count()
+supplier_count = Supplier.objects.count()
+material_count = RawMaterial.objects.count()
+product_count = FinishedProduct.objects.count()
+
+if user_count > 0 and supplier_count > 0 and material_count > 0:
+    print('DATA_EXISTS')
+else:
+    print(f'NEED_SEED:users={user_count},suppliers={supplier_count},materials={material_count}')
+" 2>/dev/null | grep -q "DATA_EXISTS"; then
+        print_success "Existing data detected - preserving all data"
+        print_status "Only running migrations for schema updates..."
+    else
+        print_warning "⚠️  Empty or incomplete database detected"
+        
+        # CI/CD 환경에서는 자동 초기화
+        if [[ "${CI}" == "true" ]] || [[ "${GITHUB_ACTIONS}" == "true" ]]; then
+            print_status "CI/CD environment - initializing with seed data..."
+            docker compose -f docker-compose.prod.yml --env-file .env.prod exec -T backend python manage.py seed_data --clear
+            print_success "Database initialized with seed data"
+        else
+            # 수동 배포에서는 사용자 확인
+            print_status "This will initialize database with seed data (admin/admin123)"
+            read -p "Proceed with database initialization? (y/N): " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                docker compose -f docker-compose.prod.yml --env-file .env.prod exec -T backend python manage.py seed_data --clear
+                print_success "Database initialized with seed data"
+            else
+                print_warning "Skipping initialization - you may need to create data manually"
+            fi
+        fi
+    fi
     
     # 정적 파일 수집
     print_status "Collecting static files..."
