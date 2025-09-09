@@ -52,8 +52,8 @@ jobs:
     - name: Run backend tests with coverage
       env:
         DATABASE_NAME: test_mes_db
-        DATABASE_USER: test_user
-        DATABASE_PASSWORD: test_password
+        DATABASE_USER: root
+        DATABASE_PASSWORD: root_password
         DATABASE_HOST: 127.0.0.1
         DATABASE_PORT: 3306
         SECRET_KEY: test-secret-key-for-ci
