@@ -283,3 +283,7 @@ jspm_packages/
 
 # DynamoDB Local files
 .dynamodb
+
+# Production deployment files
+.env.prod
+backups/
