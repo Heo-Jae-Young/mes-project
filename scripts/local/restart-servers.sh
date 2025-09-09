@@ -4,7 +4,7 @@ echo "-- 서버 재시작 스크립트 시작 --"
 
 # 프로젝트 루트 디렉토리 찾기
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
 cd "$PROJECT_ROOT"
 
 echo "프로젝트 루트: $PROJECT_ROOT"

@@ -39,7 +39,7 @@ cd ../frontend
 npm install
 
 # 6. Start both servers
-./scripts/restart_servers.sh
+./scripts/local/restart-servers.sh
 ```
 
 ### Detailed Setup Guide
@@ -92,7 +92,7 @@ npm install
 
 - **백엔드**: 95% (핵심 API + 생산 관리 + 원자재 관리 + 제품 관리 완료)
 - **프론트엔드**: 98% (인증 + 대시보드 + CCP 로그 + 생산 관리 + 원자재 관리 + 제품 관리 + 공급업체 관리 완료)
-- **배포**: 0% (미구현)
+- **배포**: 100% (AWS EC2 Docker 프로덕션 배포 시스템 구축 완료)
 
 ### 🏗️ Technical Infrastructure
 
@@ -114,6 +114,14 @@ npm install
 - date-fns for date handling
 - react-hook-form for form validation
 - @heroicons/react for icons
+
+**Production Deployment Stack**
+
+- Docker & Docker Compose for containerization
+- Nginx reverse proxy with static file optimization
+- MariaDB production database
+- AWS EC2 with Ubuntu 24.04 LTS
+- Automated deployment scripts and documentation
 
 **Data Models (HACCP-based)**
 
@@ -234,44 +242,94 @@ npm install
 
 ### 📋 Planned Features
 
-**최우선 (현재 작업)**
+**🚨 최우선 (급한 작업)**
 
-1. **MaterialLotUsage 모델 및 상세 소비 이력 시스템** 📝
+1. **Views 테스트 시스템 구축** 🧪
+
+   - API 엔드포인트 안정성 확보 (현재 27-42% 커버리지)
+   - ViewSets별 단위 테스트: CRUD 동작, 권한 검증, 에러 처리
+   - API 클라이언트 테스트 (APIClient, 인증 토큰)
+   - 비즈니스 로직 검증: FIFO 할당, CCP 이탈 감지 등
+
+2. **Frontend 테스트 시스템 구축** ⚛️
+
+   - React 컴포넌트 테스트 (React Testing Library)
+   - Custom Hook 테스트 (useEntityPage, useAuth 등)
+   - API 연동 테스트 (Mock Service Worker)
+   - 사용자 시나리오 테스트 (E2E)
+
+**Phase 1: 최우선 (테스트 및 기본 CI/CD)**
+
+3. **Frontend 테스트 시스템 구축** ⚛️
+
+   - React 컴포넌트 테스트 (React Testing Library)
+   - Custom Hook 테스트 (useEntityPage, useAuth 등)
+   - API 연동 테스트 (Mock Service Worker)
+   - 사용자 시나리오 테스트 (E2E)
+
+4. **GitHub Actions CI/CD 파이프라인** 🤖
+
+   - 자동 테스트 및 코드 품질 검증
+   - main 브랜치 push 시 자동 배포
+   - Docker 이미지 빌드 및 EC2 배포 자동화
+   - 롤백 시스템 및 배포 실패 알림
+
+**Phase 2: 단기 목표 (배포 시스템 고도화)**
+
+5. **무중단 배포 시스템** 🔄
+
+   - Rolling Update 배포 방식 도입
+   - 헬스체크 기반 자동 롤백
+   - Blue-Green 배포 고려
+
+6. **배포 모니터링 & 알림** 📊
+
+   - Slack/Discord 배포 알림 연동
+   - 배포 이력 대시보드
+   - 성능 모니터링 (응답시간, 에러율)
+
+**Phase 3: 중장기 목표 (기능 확장 및 인프라)**
+
+7. **MaterialLotUsage 모델 및 상세 소비 이력 시스템** 📝
 
    - MaterialLot 소비 기록을 별도 테이블로 완전 추적
    - 하이브리드 접근법: MaterialLot.quantity_current + MaterialLotUsage 이력
    - 누가, 언제, 얼마나, 왜, 어떤 생산오더에서 소비했는지 완전 기록
    - HACCP 감사 추적 (audit trail) 완벽 지원
-   - 비동기 로깅으로 성능 최적화
 
-2. **HACCP 컴플라이언스 리포트** 📊
+8. **HACCP 컴플라이언스 리포트** 📊
    - CCP별 규정 준수율 대시보드 (chart.js 활용)
    - 시간대별 트렌드 차트 및 분석
    - PDF/Excel 리포트 내보내기
 
-**중기 목표**
-
-3. **BOM 시스템 고도화** 🔧
+9. **BOM 시스템 고도화** 🔧
 
    - BOM 일괄 등록 기능 (CSV/Excel)
    - BOM 버전 관리 및 이력 추적
    - 원가 변동 추이 분석
 
-4. **실시간 알림 시스템** 🔔
+10. **실시간 알림 시스템** 🔔
 
-   - WebSocket 기반 실시간 알림 (Django Channels)
-   - 중요 이탈/유통기한 임박 등 즉시 알림
+    - WebSocket 기반 실시간 알림 (Django Channels)
+    - 중요 이탈/유통기한 임박 등 즉시 알림
 
-5. **모바일 반응형 UI** 📱
-   - 태블릿/모바일 환경 최적화
-   - PWA(Progressive Web App) 지원
+11. **인프라 자동화 (IaC)** 🏗️
 
-**장기 목표**
+    - Terraform으로 AWS 인프라 코드화
+    - 환경별 배포 (dev → staging → production)
+    - Docker 이미지 보안 스캔 자동화
 
-6. **배포 및 운영** 🚀
-   - Docker 컨테이너화 (Django, React, MariaDB)
-   - Nginx 프로덕션 환경 구성
-   - 클라우드 배포 (AWS/DigitalOcean)
+12. **모바일 반응형 UI** 📱
+    - 태블릿/모바일 환경 최적화
+    - PWA(Progressive Web App) 지원
+
+**완료된 작업:**
+
+13. **배포 및 운영** ✅
+   - Docker 컨테이너화 완료 (Django, React, MariaDB, Nginx)
+   - AWS EC2 프로덕션 환경 구축 완료
+   - Git 기반 자동 배포 시스템 구축
+   - 완전한 배포 문서 시스템 (docs/AWS_EC2_DEPLOYMENT.md)
 
 ## Environment Variables
 
@@ -375,13 +433,13 @@ DATABASE_PORT=3306
 
 ```bash
 # 서버 재시작 (백엔드 + 프론트엔드)
-./scripts/restart_servers.sh
+./scripts/local/restart-servers.sh
 
 # 서버 중지
-./scripts/stop_servers.sh
+./scripts/local/stop-servers.sh
 
 # 서버 상태 확인
-./scripts/check_servers.sh
+./scripts/local/check-servers.sh
 ```
 
 #### 수동 실행

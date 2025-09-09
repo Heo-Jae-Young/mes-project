@@ -2,7 +2,7 @@
 
 > 🏭 **HACCP 기반 제조 실행 시스템** - 식품 안전 규정 준수를 위한 디지털 MES 플랫폼
 
-[![Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-Planned-yellow)](https://your-demo-url.com)
+[![Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-Available-brightgreen)](http://54.180.138.119)
 [![Backend Coverage](https://img.shields.io/badge/Backend%20Coverage-78%25-green)](backend/htmlcov/index.html)
 [![Frontend Tests](https://img.shields.io/badge/Frontend%20Tests-Planned-yellow)](#testing-strategy--plan)
 [![Architecture](https://img.shields.io/badge/Architecture-Service%20Layer%20+%20Custom%20Hooks-blue)](#-주요-아키텍처-혁신)
@@ -26,6 +26,12 @@
 - 🔌 **Service Adapter 패턴** - 기존 API와 호환성 보장
 - 🎨 **컴포넌트 추상화** - 재사용 가능한 UI 패턴 구축
 
+**배포 인프라 (Docker + AWS)**
+
+- 🐳 **Docker 컨테이너화** - 멀티스테이지 빌드 및 프로덕션 최적화
+- 🌐 **Nginx 리버스 프록시** - React/Django 통합 서빙 및 정적 파일 최적화
+- 🚀 **AWS EC2 배포** - 완전 자동화된 배포 시스템 및 문서화
+
 ### 핵심 기능
 
 **✅ 구현 완료**
@@ -48,11 +54,27 @@
   - 통합 테스트: API 및 시리얼라이저 통합 검증
   - pytest-django + Mock을 활용한 격리된 테스트 환경
 
-**🚧 개발 중 (다음 우선순위)**
+- 🚀 **프로덕션 배포 시스템** - AWS EC2 Docker 기반 완전 자동화
+  - Docker Compose 프로덕션 환경 구성
+  - Nginx 리버스 프록시 및 정적 파일 최적화  
+  - Git 기반 자동 배포 및 완전한 문서화 (docs/AWS_EC2_DEPLOYMENT.md)
+  - 실제 배포 검증 완료 (신규 EC2 인스턴스 테스트)
 
-- 🧪 **Frontend 테스트 시스템** - Custom Hook 및 비즈니스 로직 테스트
+**🚧 개발 중 (우선순위별)**
+
+**🔥 최우선 (Phase 1)**
+- 🧪 **Frontend 테스트 시스템** - Custom Hook 및 비즈니스 로직 테스트  
+- 🤖 **GitHub Actions CI/CD** - 자동 배포 및 테스트 파이프라인
+
+**⚡ 단기 목표 (Phase 2)**
+- 🔄 **무중단 배포** - Rolling Update 및 자동 롤백
+- 🔔 **배포 알림 시스템** - Slack/Discord 연동
+- 📊 **배포 모니터링** - 성능 및 상태 추적
+
+**🚀 중장기 목표 (Phase 3)**  
 - 📈 **HACCP 컴플라이언스 리포트** - 상세 분석 및 시각화
 - 🚨 **실시간 알림 시스템** - WebSocket 기반 중요 이탈 즉시 알림
+- 🏗️ **인프라 자동화** - Terraform 기반 IaC
 
 ## 🛠 기술 스택
 
@@ -80,7 +102,9 @@
 
 ## 🚀 빠른 시작
 
-### 사전 요구사항
+### 개발 환경 설정
+
+#### 사전 요구사항
 
 - Docker & Docker Compose
 - Python 3.12.7 (managed via asdf)
@@ -99,7 +123,7 @@ cp backend/.env.example backend/.env
 # .env 파일의 DATABASE_HOST, SECRET_KEY 등을 실제 값으로 수정
 
 # 3. 전체 환경 자동 시작 (MariaDB + Django + React)
-./scripts/restart_servers.sh
+./scripts/local/restart-servers.sh
 ```
 
 ### 📝 수동 설치 (문제 해결 시)
@@ -130,6 +154,83 @@ cd ../frontend && npm start
 - **백엔드 API**: http://localhost:8000/api/
 - **Swagger UI**: http://localhost:8000/api/docs/
 - **Django Admin**: http://localhost:8000/admin/ (admin/admin123)
+
+### 🚀 프로덕션 배포
+
+AWS EC2에서 Docker 기반 프로덕션 배포를 위한 완전한 가이드를 제공합니다.
+
+```bash
+# 배포 문서 확인
+cat docs/AWS_EC2_DEPLOYMENT.md
+
+# 핵심 특징:
+# - 실제 배포 경험 기반 완전한 문서화
+# - Git 기반 자동 배포 시스템
+# - Docker Compose 프로덕션 환경
+# - Nginx 리버스 프록시 및 정적 파일 최적화
+# - 단계별 상세 가이드 및 문제 해결법
+```
+
+**🌐 라이브 데모**: [http://54.180.138.119](http://54.180.138.119)
+- 관리자 계정: `admin/admin123`
+- 실제 AWS EC2 환경에서 구동 중
+
+#### 🤖 GitHub Actions 자동 배포 (계획 중)
+
+다음 단계로 GitHub Actions를 통한 자동 배포 파이프라인 구축이 예정되어 있습니다:
+
+```yaml
+# .github/workflows/deploy.yml (예정)
+name: Production Deployment
+on:
+  push:
+    branches: [main]
+    
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd mes-project
+            git pull origin main
+            docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+```
+
+**CI/CD 파이프라인 구성 요소:**
+- ✅ **코드 품질 검증** - pytest + coverage 체크
+- ✅ **Docker 이미지 빌드** - 멀티스테이지 최적화  
+- 🔄 **자동 배포** - main 브랜치 push 시 EC2 배포
+- 🔄 **롤백 시스템** - 배포 실패 시 이전 버전 복구
+
+#### 🚀 고도화 배포 시스템 (장기 계획)
+
+**Phase 2: 무중단 배포 & 모니터링**
+```yaml
+# 무중단 롤링 배포
+strategy:
+  type: RollingUpdate
+  maxUnavailable: 0
+  maxSurge: 1
+
+# 배포 후 헬스체크 & 자동 롤백
+healthcheck:
+  timeout: 30s
+  retries: 3
+  rollback_on_failure: true
+```
+
+**Phase 3: 엔터프라이즈급 배포**
+- 🎯 **환경별 배포**: dev → staging → production
+- 🔔 **Slack 알림**: 배포 상태 실시간 알림  
+- 📊 **배포 대시보드**: 배포 이력 및 성능 모니터링
+- 🛡️ **보안 스캔**: Docker 이미지 취약점 자동 검사
+- 🏗️ **IaC (Terraform)**: 인프라도 코드로 관리
 
 ## 🎨 주요 구현 화면
 
