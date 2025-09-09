@@ -26,11 +26,12 @@
 - 🔌 **Service Adapter 패턴** - 기존 API와 호환성 보장
 - 🎨 **컴포넌트 추상화** - 재사용 가능한 UI 패턴 구축
 
-**배포 인프라 (Docker + AWS)**
+**배포 인프라 (Docker + AWS + CI/CD)**
 
 - 🐳 **Docker 컨테이너화** - 멀티스테이지 빌드 및 프로덕션 최적화
 - 🌐 **Nginx 리버스 프록시** - React/Django 통합 서빙 및 정적 파일 최적화
 - 🚀 **AWS EC2 배포** - 완전 자동화된 배포 시스템, 최적화된 deploy.sh 스크립트
+- 🤖 **GitHub Actions CI/CD** - 자동 테스트 및 프로덕션 배포 파이프라인
 
 ### 핵심 기능
 
@@ -60,11 +61,16 @@
   - Git 기반 자동 배포 및 완전한 문서화 (docs/AWS_EC2_DEPLOYMENT.md)
   - 실제 배포 검증 완료 (신규 EC2 인스턴스 테스트)
 
+- 🤖 **GitHub Actions CI/CD 파이프라인** - 완전 자동화 배포
+  - 백엔드 테스트 자동 실행 (70% 커버리지 통과 필수)
+  - 프론트엔드 빌드 자동 검증  
+  - PR 머지 시 AWS EC2 자동 배포
+  - 프로덕션 데이터 보전 시스템 (기존 데이터 유지)
+
 **🚧 개발 중 (우선순위별)**
 
 **🔥 최우선 (Phase 1)**
-- 🧪 **Frontend 테스트 시스템** - Custom Hook 및 비즈니스 로직 테스트  
-- 🤖 **GitHub Actions CI/CD** - 자동 배포 및 테스트 파이프라인
+- 🧪 **Frontend 테스트 시스템** - Custom Hook 및 비즈니스 로직 테스트
 
 **⚡ 단기 목표 (Phase 2)**
 - 🔄 **무중단 배포** - Rolling Update 및 자동 롤백
@@ -97,8 +103,10 @@
 
 **Infrastructure:**
 
-- Docker Compose for development
-- Nginx for production (planned)
+- Docker & Docker Compose (development + production)
+- Nginx reverse proxy with static file optimization
+- AWS EC2 with Ubuntu 24.04 LTS
+- GitHub Actions CI/CD pipeline
 
 ## 🚀 빠른 시작
 
@@ -175,38 +183,49 @@ cat docs/AWS_EC2_DEPLOYMENT.md
 - 관리자 계정: `admin/admin123`
 - 실제 AWS EC2 환경에서 구동 중
 
-#### 🤖 GitHub Actions 자동 배포 (계획 중)
+#### 🤖 GitHub Actions 자동 배포 ✅
 
-다음 단계로 GitHub Actions를 통한 자동 배포 파이프라인 구축이 예정되어 있습니다:
+완전한 CI/CD 파이프라인이 구축되어 PR 머지 시 자동으로 프로덕션 배포됩니다:
 
 ```yaml
-# .github/workflows/deploy.yml (예정)
+# .github/workflows/deploy.yml (구현 완료)
 name: Production Deployment
 on:
-  push:
+  pull_request:
     branches: [main]
+    types: [closed]
     
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Backend Tests
+        run: pytest --cov=core --cov-fail-under=70
+      - name: Frontend Build
+        run: npm run build
+        
   deploy:
+    needs: test
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to EC2
-        uses: appleboy/ssh-action@v0.1.5
+        uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: ${{ secrets.AWS_EC2_HOST }}
+          username: ${{ secrets.AWS_EC2_USER }}
+          key: ${{ secrets.AWS_EC2_PRIVATE_KEY }}
           script: |
-            cd mes-project
+            cd /home/ubuntu/mes-project
             git pull origin main
-            docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+            ./scripts/production/deploy.sh
 ```
 
-**CI/CD 파이프라인 구성 요소:**
-- ✅ **코드 품질 검증** - pytest + coverage 체크
-- ✅ **Docker 이미지 빌드** - 멀티스테이지 최적화  
-- 🔄 **자동 배포** - main 브랜치 push 시 EC2 배포
-- 🔄 **롤백 시스템** - 배포 실패 시 이전 버전 복구
+**✅ CI/CD 파이프라인 구현 완료:**
+- ✅ **자동 테스트** - 백엔드 70% 커버리지 통과 필수
+- ✅ **프론트엔드 빌드** - React 빌드 검증
+- ✅ **자동 배포** - PR 머지 시 EC2 배포
+- ✅ **데이터 보전** - 기존 프로덕션 데이터 유지
 
 #### 🚀 고도화 배포 시스템 (장기 계획)
 
@@ -411,7 +430,7 @@ mes-project/
 - [x] **Nginx 리버스 프록시**: React/Django 통합 서빙, 정적 파일 최적화
 - [x] **실제 배포 검증**: 신규 EC2 인스턴스에서 처음부터 배포 테스트 완료
 - [x] **배포 문서화**: 완전한 단계별 가이드 (docs/AWS_EC2_DEPLOYMENT.md)
-- [ ] **CI/CD Pipeline**: GitHub Actions 자동 테스트 및 배포
+- [x] **CI/CD Pipeline**: GitHub Actions 자동 테스트 및 배포 완료
 - [ ] **무중단 배포**: Rolling Update, Blue-Green 배포
 - [ ] **모니터링**: Slack/Discord 알림, 성능 추적, 로그 관리
 
