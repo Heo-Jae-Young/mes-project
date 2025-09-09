@@ -2,7 +2,7 @@
 
 > 🏭 **HACCP 기반 제조 실행 시스템** - 식품 안전 규정 준수를 위한 디지털 MES 플랫폼
 
-[![Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-Available-brightgreen)](http://54.180.138.119)
+[![Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-Available-brightgreen)](http://52.78.61.106)
 [![Backend Coverage](https://img.shields.io/badge/Backend%20Coverage-78%25-green)](backend/htmlcov/index.html)
 [![Frontend Tests](https://img.shields.io/badge/Frontend%20Tests-Planned-yellow)](#testing-strategy--plan)
 [![Architecture](https://img.shields.io/badge/Architecture-Service%20Layer%20+%20Custom%20Hooks-blue)](#-주요-아키텍처-혁신)
@@ -171,7 +171,7 @@ cat docs/AWS_EC2_DEPLOYMENT.md
 # - 단계별 상세 가이드 및 문제 해결법
 ```
 
-**🌐 라이브 데모**: [http://54.180.138.119](http://54.180.138.119)
+**🌐 라이브 데모**: [http://52.78.61.106](http://52.78.61.106)
 - 관리자 계정: `admin/admin123`
 - 실제 AWS EC2 환경에서 구동 중
 
