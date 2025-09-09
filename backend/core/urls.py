@@ -15,6 +15,7 @@ from core.views import (
     CCPViewSet,
     CCPLogViewSet,
     StatisticsAPIView,
+    health_check,
 )
 from core.views.bom_views import BOMViewSet
 from core.views.cost_calculation_views import (
@@ -38,6 +39,9 @@ router.register(r'ccp-logs', CCPLogViewSet, basename='ccplog')
 router.register(r'bom', BOMViewSet, basename='bom')
 
 urlpatterns = [
+    # Health check endpoint (인증 불필요)
+    path('health/', health_check, name='health_check'),
+    
     # JWT Token endpoints
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
