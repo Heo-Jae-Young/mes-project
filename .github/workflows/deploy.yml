@@ -129,28 +129,7 @@ jobs:
             echo "✅ Deployment successful!"
             
             # Python urllib로 헬스체크 테스트 (더 자세한 디버깅 정보 제공)
-            docker exec mes-backend-prod python -c "
-            import urllib.request
-            import urllib.error
-            import json
-            
-            try:
-                with urllib.request.urlopen('http://localhost:8000/api/health/', timeout=10) as response:
-                    data = response.read().decode('utf-8')
-                    print('✅ API Health Check Success!')
-                    print('Status Code:', response.getcode())
-                    print('Response:', data)
-            except urllib.error.HTTPError as e:
-                print('❌ HTTP Error:', e.code, e.reason)
-                print('Response Body:', e.read().decode('utf-8') if hasattr(e, 'read') else 'No response body')
-                exit(1)
-            except urllib.error.URLError as e:
-                print('❌ URL Error:', str(e))
-                exit(1)
-            except Exception as e:
-                print('❌ Unexpected Error:', str(e))
-                exit(1)
-            "
+            docker exec mes-backend-prod python -c 'import urllib.request,urllib.error; resp=urllib.request.urlopen("http://localhost:8000/api/health/",timeout=10); print("✅ Health Check Success! Code:",resp.getcode(),"Data:",resp.read().decode("utf-8"))'
           else
             echo "❌ Deployment failed"
             exit 1
