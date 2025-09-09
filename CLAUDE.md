@@ -90,9 +90,10 @@ npm install
 
 ### 📊 Overall Progress
 
-- **백엔드**: 95% (핵심 API + 생산 관리 + 원자재 관리 + 제품 관리 완료)
-- **프론트엔드**: 98% (인증 + 대시보드 + CCP 로그 + 생산 관리 + 원자재 관리 + 제품 관리 + 공급업체 관리 완료)
-- **배포**: 100% (AWS EC2 Docker 프로덕션 배포 시스템 구축 완료)
+- **백엔드**: 98% (완전한 HACCP MES 시스템 + 종합 테스트 시스템 완료)
+- **프론트엔드**: 100% (전체 UI/UX + useEntityPage 훅 리팩토링 완료)
+- **테스트**: 78% 커버리지 (Models + Services + Serializers + 통합테스트 완료)
+- **배포**: 100% (AWS EC2 최적화 배포 + 완전한 문서화 완료)
 
 ### 🏗️ Technical Infrastructure
 
@@ -103,11 +104,12 @@ npm install
 - JWT Authentication (djangorestframework-simplejwt)
 - Service Layer Architecture Pattern
 - Repository Pattern for complex queries
-- pytest-django + pytest-cov testing framework
+- **종합 테스트 시스템**: pytest-django + 78% 커버리지 (265 tests)
 
 **Frontend Stack**
 
 - React 18+ with modern hooks
+- **useEntityPage 커스텀 훅**: CRUD 로직 40% 코드 감소
 - Axios API client with JWT interceptors
 - Context API for global state management
 - Tailwind CSS for styling
@@ -234,6 +236,22 @@ npm install
 - HACCP 비즈니스 로직 검증 테스트
 - BOM 테스트 픽스처 및 헬퍼 함수 완료
 - Timezone RuntimeWarning 문제 해결
+
+**Frontend Architecture Improvements** ✅
+
+- useEntityPage 커스텀 훅 도입 (PR #18)
+- CRUD 로직 코드 40% 감소 달성
+- 페이지별 일관된 상태 관리 및 API 연동
+- 재사용 가능한 컴포넌트 패턴 구축
+
+**Production Deployment System** ✅
+
+- AWS EC2 완전 자동화 배포 시스템 구축 (PR #22)
+- Docker Compose 멀티 컨테이너 프로덕션 환경
+- 최적화된 deploy.sh 스크립트 (--no-cache 제거, 스마트 대기)
+- Nginx 리버스 프록시 + 정적 파일 최적화
+- 실제 EC2 배포 검증 완료
+- 완전한 배포 문서화 (docs/AWS_EC2_DEPLOYMENT.md)
 
 ### ⚠️ Current Limitations
 
@@ -474,6 +492,25 @@ pytest backend --cov=core --cov-report=html
 # 커버리지 리포트 (터미널)
 pytest backend --cov=core --cov-report=term-missing
 
+# 특정 도메인 테스트만 실행
+pytest backend/core/tests/unit/models/test_user.py -v
+pytest backend/core/tests/unit/services/ -v
+pytest backend/core/tests/unit/serializers/ -v
+```
+
+### Production Deployment
+
+```bash
+# AWS EC2 프로덕션 배포 (전체 자동화)
+./scripts/production/deploy.sh
+
+# 로컬 프로덕션 테스트
+./run-local-prod.sh
+
+# 수동 배포 (단계별)
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+docker compose -f docker-compose.prod.yml --env-file .env.prod exec -T backend python manage.py migrate
+docker compose -f docker-compose.prod.yml --env-file .env.prod exec -T backend python manage.py seed_data --clear
 ```
 
 ### Database Management
