@@ -30,7 +30,7 @@
 
 - 🐳 **Docker 컨테이너화** - 멀티스테이지 빌드 및 프로덕션 최적화
 - 🌐 **Nginx 리버스 프록시** - React/Django 통합 서빙 및 정적 파일 최적화
-- 🚀 **AWS EC2 배포** - 완전 자동화된 배포 시스템 및 문서화
+- 🚀 **AWS EC2 배포** - 완전 자동화된 배포 시스템, 최적화된 deploy.sh 스크립트
 
 ### 핵심 기능
 
@@ -299,41 +299,56 @@ healthcheck:
 ```
 mes-project/
 ├── scripts/                 # 🆕 서버 관리 자동화 스크립트
-│   ├── restart_servers.sh   # 전체 환경 재시작
-│   ├── stop_servers.sh      # 모든 서버 중지
-│   └── check_servers.sh     # 서버 상태 종합 진단
+│   ├── local/               # 로컬 개발용
+│   │   ├── restart-servers.sh # 백엔드+프론트엔드 재시작
+│   │   ├── stop-servers.sh    # 모든 서버 중지
+│   │   └── check-servers.sh   # 서버 상태 종합 진단
+│   └── production/          # 프로덕션 배포용
+│       ├── deploy.sh        # AWS EC2 완전 자동화 배포
+│       └── init-database.sql # MariaDB 초기화
 ├── backend/                 # Django 백엔드
 │   ├── core/                # HACCP MES 핵심 앱
 │   │   ├── models/          # 8개 도메인 모델 (User, CCP, Production 등)
 │   │   ├── serializers/     # DRF 직렬화기
 │   │   ├── services/        # Service Layer 비즈니스 로직
 │   │   ├── views/           # API ViewSets
-│   │   └── tests/           # 111개 단위 테스트 (Service Layer 완전 커버리지)
+│   │   └── tests/           # 종합 테스트 시스템 (265 tests, 78% 커버리지)
+│   │   │   ├── unit/        # 단위 테스트 (models, services, serializers)
+│   │   │   ├── integration/ # 통합 테스트 (API, 시리얼라이저)
+│   │   │   └── helpers/     # 테스트 헬퍼 및 픽스처
 │   └── docs/                # 백엔드 기술 문서
 ├── frontend/                # React 프론트엔드
 │   ├── src/
 │   │   ├── components/      # 재사용 UI 컴포넌트
+│   │   │   ├── common/      # 공통 컴포넌트 (LoadingCard, 통일된 UI)
 │   │   │   ├── forms/       # 폼 컴포넌트 (CCPLogForm, ProductionOrderForm)
 │   │   │   ├── lists/       # 목록 컴포넌트 (CCPLogList, ProductionOrderList)
 │   │   │   ├── layout/      # 레이아웃 컴포넌트 (Header)
 │   │   │   ├── production/  # 생산 관리 컴포넌트 (ProductionControls)
-│   │   │   ├── materials/   # 원자재 관리 컴포넌트 (MaterialForm, MaterialList)
-│   │   │   └── products/    # 제품 관리 컴포넌트 (ProductForm, ProductList)
-│   │   ├── pages/           # 페이지별 컴포넌트 (Login, Dashboard, CCPLogs, ProductionPage, ProductsPage, MaterialsPage)
-│   │   ├── services/        # API 서비스 레이어 (authService, ccpService, productionService, productService, materialService)
+│   │   │   ├── materials/   # 원자재 관리 컴포넌트 (고급 로트 관리)
+│   │   │   ├── products/    # 제품 관리 컴포넌트 (BOM, 원가계산)
+│   │   │   └── suppliers/   # 공급업체 관리 컴포넌트
+│   │   ├── pages/           # 페이지별 컴포넌트 (완전한 HACCP MES UI)
+│   │   ├── hooks/           # 커스텀 훅 (useEntityPage - CRUD 로직 40% 감소)
+│   │   ├── services/        # API 서비스 레이어 (도메인별 완전 구현)
 │   │   ├── utils/           # 유틸리티 (dateFormatter)
 │   │   └── context/         # 전역 상태 관리 (AuthContext)
 │   └── docs/                # 프론트엔드 기술 문서
-├── docs/                    # 프로젝트 일반 문서
-│   ├── DATABASE_SETUP.md    # DB 설정 완전 가이드
-│   └── SERVER_SCRIPTS.md    # 자동화 스크립트 가이드
+├── docs/                    # 포괄적인 프로젝트 문서화
+│   ├── AWS_EC2_DEPLOYMENT.md      # AWS 배포 완전 가이드
+│   ├── DATABASE_SETUP.md          # DB 설정 완전 가이드
+│   ├── SERVER_SCRIPTS.md          # 자동화 스크립트 가이드
+│   ├── PROJECT_ARCHITECTURE.md    # 프로젝트 구조 및 아키텍처
+│   └── DEVELOPMENT_BEST_PRACTICES.md # 개발 베스트 프랙티스
 ├── docker-compose.yml       # MariaDB 개발환경
+├── docker-compose.prod.yml  # 프로덕션 배포 환경
+├── run-local-prod.sh       # 로컬 프로덕션 테스트
 └── CLAUDE.md               # 메인 개발 가이드
 ```
 
 ## 🏗 개발 진행률
 
-### ✅ Backend (95% 완료)
+### ✅ Backend Development (완료)
 
 - [x] Django 5.2.5 + DRF 환경 구성
 - [x] MariaDB Docker 연동 및 설정
@@ -354,7 +369,7 @@ mes-project/
 - [x] API 문서화 (Swagger UI)
 - [x] 아키텍처 개선: 레이어별 책임 분리, 중복 코드 제거
 
-### ✅ Frontend (95% 완료)
+### ✅ Frontend Development (완료)
 
 - [x] React 18+ 프로젝트 구조
 - [x] JWT 기반 로그인/로그아웃 (자동 토큰 갱신)
@@ -368,16 +383,46 @@ mes-project/
 - [x] **고급 로트 관리 UI**: 로트 상세 모달, 품질검사 상태 변경, 사용 이력 타임라인, 비활성화 처리
 - [x] **제품 관리 UI**: 제품 CRUD, 영양성분 입력, 알러지 정보 관리
 - [x] **BOM 원가 계산 UI**: 실시간 원가 표시, 상세 내역 모달, 미설정 제품 알림
+- [x] **공급업체 관리 UI**: 완전한 CRUD, 상세 페이지, 성과 지표, 검색/필터링
+- [x] **useEntityPage 커스텀 훅**: CRUD 로직 40% 코드 감소, 페이지별 일관성
 - [x] **react-hook-form + date-fns**: 고급 폼 검증 및 날짜 처리
-- [x] **일관성 있는 디자인**: blue 색상 스키마, 통일된 레이아웃 패턴
+- [x] **LoadingCard + 통일된 UI**: 일관된 로딩 UI, 테이블 스타일 통합
 - [ ] HACCP 컴플라이언스 리포트 (차트/시각화)
-- [ ] 공급업체 관리 UI (등록/조회/수정)
 
-### ❌ Infrastructure (0% 완료)
+### 🧪 Testing & Quality (진행 중)
 
-- [ ] Docker 컨테이너화 (Django, React, MariaDB)
-- [ ] Nginx 프로덕션 환경 설정
-- [ ] 클라우드 배포 (AWS/DigitalOcean)
+- [x] **Backend Testing (78% 커버리지)**: 265개 테스트 완료
+  - [x] Unit Tests: Models, Services, Serializers 완전 커버리지
+  - [x] Integration Tests: API 및 시리얼라이저 통합 검증
+  - [x] Mock을 활용한 격리된 테스트 환경
+  - [x] pytest-django + pytest-cov 테스트 프레임워크
+- [ ] **Frontend Testing (0% 완료)**: 계획 단계
+  - [ ] React 컴포넌트 테스트 (React Testing Library)
+  - [ ] Custom Hook 테스트 (useEntityPage, useAuth 등)
+  - [ ] API 연동 테스트 (Mock Service Worker)
+  - [ ] E2E 테스트 (사용자 시나리오)
+- [ ] **API Testing**: ViewSets 단위 테스트 (CRUD 동작, 권한 검증)
+
+### 🚀 DevOps & Infrastructure (진행 중)
+
+- [x] **Docker 컨테이너화**: Django + React + MariaDB + Nginx 멀티 컨테이너
+- [x] **프로덕션 환경 구성**: docker-compose.prod.yml, 멀티스테이지 빌드
+- [x] **AWS EC2 배포**: 완전 자동화된 배포 시스템 (scripts/production/deploy.sh)
+- [x] **Nginx 리버스 프록시**: React/Django 통합 서빙, 정적 파일 최적화
+- [x] **실제 배포 검증**: 신규 EC2 인스턴스에서 처음부터 배포 테스트 완료
+- [x] **배포 문서화**: 완전한 단계별 가이드 (docs/AWS_EC2_DEPLOYMENT.md)
+- [ ] **CI/CD Pipeline**: GitHub Actions 자동 테스트 및 배포
+- [ ] **무중단 배포**: Rolling Update, Blue-Green 배포
+- [ ] **모니터링**: Slack/Discord 알림, 성능 추적, 로그 관리
+
+### 📋 Advanced Features (계획 중)
+
+- [ ] **HACCP 컴플라이언스 리포트**: CCP별 준수율, 트렌드 분석, PDF/Excel 내보내기
+- [ ] **실시간 알림 시스템**: WebSocket 기반 중요 이탈, 유통기한 임박 즉시 알림
+- [ ] **MaterialLotUsage 모델**: 완전한 소비 이력 추적 시스템 (누가, 언제, 얼마나, 왜)
+- [ ] **BOM 시스템 고도화**: 일괄 등록 (CSV/Excel), 버전 관리, 원가 변동 추이 분석
+- [ ] **모바일 반응형**: 태블릿/모바일 최적화, PWA(Progressive Web App) 지원
+- [ ] **인프라 자동화**: Terraform IaC, 환경별 배포 (dev → staging → production)
 
 ## 📋 주요 명령어
 
