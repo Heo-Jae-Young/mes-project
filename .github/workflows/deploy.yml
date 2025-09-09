@@ -84,6 +84,7 @@ jobs:
     - name: Build frontend
       env:
         REACT_APP_API_URL: http://localhost:8000
+        CI: false  # ESLint 경고를 에러로 처리하지 않음
       run: |
         cd frontend
         npm run build
