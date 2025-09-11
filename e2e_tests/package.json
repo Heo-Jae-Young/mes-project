@@ -1,0 +1,25 @@
+{
+  "name": "mes-e2e-tests",
+  "version": "1.0.0", 
+  "description": "HACCP MES 시스템 E2E 테스트 스위트",
+  "main": "crud.spec.js",
+  "scripts": {
+    "test:crud": "node crud.spec.js",
+    "test:crud-headless": "HEADLESS=true node crud.spec.js",
+    "test:all": "npm run test:crud-headless",
+    "install-playwright": "npm install playwright && npx playwright install chromium"
+  },
+  "dependencies": {
+    "playwright": "^1.55.0"
+  },
+  "keywords": [
+    "HACCP",
+    "MES", 
+    "e2e",
+    "testing",
+    "playwright",
+    "browser-automation"
+  ],
+  "author": "MES Project Team",
+  "license": "MIT"
+}

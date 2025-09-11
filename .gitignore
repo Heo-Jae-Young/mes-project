@@ -287,3 +287,13 @@ jspm_packages/
 # Production deployment files
 .env.prod
 backups/
+
+# E2E Test automation
+e2e_tests/node_modules/
+e2e_tests/screenshots/
+e2e_tests/test-results/
+e2e_tests/playwright-report/
+
+# Legacy test folder (can be removed later)
+scripts/test/
+

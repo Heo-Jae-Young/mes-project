@@ -4,6 +4,7 @@
 
 [![Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-Available-brightgreen)](http://52.78.61.106)
 [![Backend Coverage](https://img.shields.io/badge/Backend%20Coverage-78%25-green)](backend/htmlcov/index.html)
+[![E2E Tests](https://img.shields.io/badge/E2E%20Tests-100%25%20Complete-brightgreen)](#-testing--quality-진행-중)
 [![Frontend Tests](https://img.shields.io/badge/Frontend%20Tests-Planned-yellow)](#testing-strategy--plan)
 [![Architecture](https://img.shields.io/badge/Architecture-Service%20Layer%20+%20Custom%20Hooks-blue)](#-주요-아키텍처-혁신)
 
@@ -49,10 +50,10 @@
 - 🏢 **공급업체 관리 시스템** - 공급업체 CRUD, 상세 페이지, 성과 지표, 검색/필터링
 - 🎨 **일관된 UI/UX** - LoadingCard 컴포넌트, 통일된 테이블 스타일, 개선된 로딩 경험
 
-- 🧪 **종합 테스트 시스템** - 78% 커버리지 달성 (265 tests passed)
-  - 단위 테스트: Models, Services, Serializers, Authentication
+- 🧪 **종합 테스트 시스템** - Backend 78% + E2E 100% 커버리지 달성
+  - 백엔드 테스트: Models, Services, Serializers (265 tests passed)
+  - E2E 테스트: Playwright 기반 실제 브라우저 CRUD 시나리오 검증
   - 통합 테스트: API 및 시리얼라이저 통합 검증
-  - pytest-django + Mock을 활용한 격리된 테스트 환경
 
 - 🚀 **프로덕션 배포 시스템** - AWS EC2 Docker 기반 완전 자동화
   - Docker Compose 프로덕션 환경 구성
@@ -63,11 +64,11 @@
 **🚧 개발 중 (우선순위별)**
 
 **🔥 최우선 (Phase 1)**
-- 🧪 **Frontend 테스트 시스템** - Custom Hook 및 비즈니스 로직 테스트  
-- 🤖 **GitHub Actions CI/CD** - 자동 배포 및 테스트 파이프라인
+- 🧪 **Frontend 테스트 시스템** - Custom Hook 및 비즈니스 로직 테스트
 
 **⚡ 단기 목표 (Phase 2)**
-- 🔄 **무중단 배포** - Rolling Update 및 자동 롤백
+- 🔄 **자동 롤백 시스템** - 배포 실패 시 이전 버전 자동 복구
+- 🔄 **무중단 배포** - Rolling Update 및 헬스체크
 - 🔔 **배포 알림 시스템** - Slack/Discord 연동
 - 📊 **배포 모니터링** - 성능 및 상태 추적
 
@@ -175,50 +176,93 @@ cat docs/AWS_EC2_DEPLOYMENT.md
 - 관리자 계정: `admin/admin123`
 - 실제 AWS EC2 환경에서 구동 중
 
-#### 🤖 GitHub Actions 자동 배포 (계획 중)
+#### 🤖 GitHub Actions 자동 배포 (구현 완료)
 
-다음 단계로 GitHub Actions를 통한 자동 배포 파이프라인 구축이 예정되어 있습니다:
+GitHub Actions를 통한 완전 자동화된 CI/CD 파이프라인이 구축되어 있습니다:
 
 ```yaml
-# .github/workflows/deploy.yml (예정)
-name: Production Deployment
+# .github/workflows/deploy.yml
+name: Deploy to Production
 on:
   push:
     branches: [main]
-    
+    paths-ignore: ['docs/**', '*.md', '.gitignore']
+  pull_request:
+    branches: [main]
+    paths-ignore: ['docs/**', '*.md', '.gitignore']
+
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root_password
+          MYSQL_DATABASE: test_mes_db
+        ports: ['3306:3306']
+        options: --health-cmd="mysqladmin ping --silent"
+    
     steps:
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@v0.1.5
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            cd mes-project
-            git pull origin main
-            docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.12.7
+      uses: actions/setup-python@v5
+    - name: Run backend tests with 70% coverage requirement
+      run: pytest --cov=core --cov-fail-under=70
+    - name: Build frontend (Node.js 23.7)
+      run: cd frontend && npm install && npm run build
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Deploy to EC2
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.AWS_EC2_HOST }}
+        username: ${{ secrets.AWS_EC2_USER }}
+        key: ${{ secrets.AWS_EC2_PRIVATE_KEY }}
+        timeout: 600s
+        script: |
+          cd /home/ubuntu/mes-project
+          git fetch origin && git reset --hard origin/main
+          chmod +x scripts/production/deploy.sh
+          ./scripts/production/deploy.sh
 ```
 
-**CI/CD 파이프라인 구성 요소:**
-- ✅ **코드 품질 검증** - pytest + coverage 체크
-- ✅ **Docker 이미지 빌드** - 멀티스테이지 최적화  
-- 🔄 **자동 배포** - main 브랜치 push 시 EC2 배포
-- 🔄 **롤백 시스템** - 배포 실패 시 이전 버전 복구
+**✅ 구현 완료된 CI/CD 파이프라인:**
+- ✅ **자동 테스트** - PR/Push 시 pytest 실행 (70% 커버리지 요구)
+- ✅ **프론트엔드 빌드 검증** - React 빌드 테스트
+- ✅ **자동 배포** - main 브랜치 push 시 EC2 자동 배포  
+- ✅ **데이터 보전** - 프로덕션 데이터 유지하면서 코드만 업데이트
+- ✅ **배포 최적화** - 600초 타임아웃, 스마트 대기 시스템
+- ✅ **Skip CI 지원** - `[skip ci]` 커밋 메시지로 배포 건너뛰기
+- ⚠️ **롤백 시스템** - 미구현 (배포 실패 시 수동 복구 필요)
 
 #### 🚀 고도화 배포 시스템 (장기 계획)
 
-**Phase 2: 무중단 배포 & 모니터링**
+**Phase 2: 무중단 배포 & 모니터링 (다음 개발 목표)**
 ```yaml
-# 무중단 롤링 배포
+# 자동 롤백 시스템 (계획)
+- name: Deploy with rollback support
+  run: |
+    PREVIOUS_COMMIT=$(git rev-parse HEAD^)
+    # Deploy new version
+    if ! ./deploy.sh; then
+      echo "Deployment failed, rolling back..."
+      git reset --hard $PREVIOUS_COMMIT
+      ./deploy.sh
+    fi
+
+# 무중단 롤링 배포 (계획)
 strategy:
   type: RollingUpdate
   maxUnavailable: 0
   maxSurge: 1
 
-# 배포 후 헬스체크 & 자동 롤백
+# 헬스체크 기반 자동 롤백 (계획)
 healthcheck:
   timeout: 30s
   retries: 3
@@ -282,7 +326,8 @@ healthcheck:
 
 - [docs/SYSTEM_DATA_FLOW.md](./docs/SYSTEM_DATA_FLOW.md) - 백엔드/프론트엔드 전체 데이터 플로우 가이드
 - [backend/docs/SERVICE_LAYER.md](./backend/docs/SERVICE_LAYER.md) - Service Layer 패턴과 비즈니스 로직 구조
-- [backend/docs/TESTING_GUIDE.md](./backend/docs/TESTING_GUIDE.md) - 테스트 아키텍처 및 실행 가이드
+- [backend/docs/TESTING_GUIDE.md](./backend/docs/TESTING_GUIDE.md) - 백엔드 테스트 아키텍처 및 실행 가이드
+- [e2e_tests/README.md](./e2e_tests/README.md) - E2E 테스트 실행 가이드 (Playwright 브라우저 자동화)
 
 **🛠️ 설정 & 운영**
 
@@ -334,6 +379,11 @@ mes-project/
 │   │   ├── utils/           # 유틸리티 (dateFormatter)
 │   │   └── context/         # 전역 상태 관리 (AuthContext)
 │   └── docs/                # 프론트엔드 기술 문서
+├── e2e_tests/               # E2E 테스트 스위트 (Playwright)
+│   ├── crud.spec.js         # CRUD 시나리오 자동화 테스트
+│   ├── package.json         # E2E 테스트 전용 의존성
+│   ├── README.md            # E2E 테스트 실행 가이드
+│   └── screenshots/         # 실패 시 자동 스크린샷
 ├── docs/                    # 포괄적인 프로젝트 문서화
 │   ├── AWS_EC2_DEPLOYMENT.md      # AWS 배포 완전 가이드
 │   ├── DATABASE_SETUP.md          # DB 설정 완전 가이드
@@ -396,11 +446,16 @@ mes-project/
   - [x] Integration Tests: API 및 시리얼라이저 통합 검증
   - [x] Mock을 활용한 격리된 테스트 환경
   - [x] pytest-django + pytest-cov 테스트 프레임워크
-- [ ] **Frontend Testing (0% 완료)**: 계획 단계
+- [x] **E2E Testing (100% 완료)**: 전체 사용자 시나리오 검증
+  - [x] Playwright 기반 브라우저 자동화 테스트
+  - [x] 실제 라이브 서버에서 CRUD 시나리오 검증
+  - [x] 동적 테스트 데이터 생성으로 중복 방지
+  - [x] 검증 실패 감지 및 스크린샷 자동 저장
+  - [x] 데코레이터 패턴 기반 깔끔한 로깅 시스템
+- [ ] **Frontend Unit Testing (0% 완료)**: 계획 단계
   - [ ] React 컴포넌트 테스트 (React Testing Library)
   - [ ] Custom Hook 테스트 (useEntityPage, useAuth 등)
   - [ ] API 연동 테스트 (Mock Service Worker)
-  - [ ] E2E 테스트 (사용자 시나리오)
 - [ ] **API Testing**: ViewSets 단위 테스트 (CRUD 동작, 권한 검증)
 
 ### 🚀 DevOps & Infrastructure (진행 중)
@@ -411,7 +466,7 @@ mes-project/
 - [x] **Nginx 리버스 프록시**: React/Django 통합 서빙, 정적 파일 최적화
 - [x] **실제 배포 검증**: 신규 EC2 인스턴스에서 처음부터 배포 테스트 완료
 - [x] **배포 문서화**: 완전한 단계별 가이드 (docs/AWS_EC2_DEPLOYMENT.md)
-- [ ] **CI/CD Pipeline**: GitHub Actions 자동 테스트 및 배포
+- [x] **CI/CD Pipeline**: GitHub Actions 자동 테스트 및 배포 구현 완료
 - [ ] **무중단 배포**: Rolling Update, Blue-Green 배포
 - [ ] **모니터링**: Slack/Discord 알림, 성능 추적, 로그 관리
 
@@ -442,9 +497,15 @@ python manage.py migrate         # 마이그레이션 적용
 python manage.py seed_data --clear  # 샘플 데이터 + 관리자 계정 생성
 python manage.py check          # 설정 검증
 
-# 테스트
-pytest -v                      # 전체 테스트 실행
+# 백엔드 테스트 (78% 커버리지)
+pytest -v                      # 전체 테스트 실행 (265 tests)
 pytest --cov=core --cov-report=html  # 커버리지 리포트
+
+# E2E 테스트 (End-to-End 브라우저 테스트)
+cd e2e_tests                    # E2E 테스트 디렉토리로 이동
+npm install                     # Playwright 설치
+npm run test:crud              # 브라우저 창에서 실행 (시각적 확인)
+npm run test:crud-headless     # 백그라운드 실행 (빠름)
 
 # Docker
 docker-compose up -d db         # MariaDB만 실행
