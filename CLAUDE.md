@@ -227,15 +227,23 @@ npm install
 
 **Comprehensive Testing System** ✅
 
-- 도메인별 모델 테스트 시스템 (PR #19)
-- Service Layer 종합 테스트 시스템 (PR #20)
-- Serializer 단위 테스트 시스템 (PR #21)
-- 78% 테스트 커버리지 달성
-- pytest-django + pytest-cov 테스트 프레임워크
-- 단위 테스트, 통합 테스트, 모킹 시스템 완료
-- HACCP 비즈니스 로직 검증 테스트
-- BOM 테스트 픽스처 및 헬퍼 함수 완료
-- Timezone RuntimeWarning 문제 해결
+- **Backend Testing**: 78% 커버리지, 265개 테스트 통과
+  - 도메인별 모델 테스트 시스템 (PR #19)
+  - Service Layer 종합 테스트 시스템 (PR #20)
+  - Serializer 단위 테스트 시스템 (PR #21)
+  - pytest-django + pytest-cov 테스트 프레임워크
+  - HACCP 비즈니스 로직 검증 테스트
+  - BOM 테스트 픽스처 및 헬퍼 함수 완료
+- **E2E Testing**: Playwright 기반 브라우저 자동화
+  - 공급업체/원자재 CRUD 워크플로우 완료
+  - 로그인/대시보드/권한 검증 자동화
+  - 동적 테스트 데이터 생성으로 중복 방지
+  - 실패 시 자동 스크린샷 저장
+- **통합 테스팅 가이드**: `docs/TESTING_GUIDE.md` ⭐
+  - Backend + Frontend + E2E 전체 전략
+  - 시각화된 테스트 아키텍처 다이어그램
+  - 시간 투자 대비 ROI 분석
+  - 단계별 구현 로드맵
 
 **Frontend Architecture Improvements** ✅
 
@@ -276,7 +284,7 @@ npm install
    - API 연동 테스트 (Mock Service Worker)
    - 사용자 시나리오 테스트 (E2E)
 
-**Phase 1: 최우선 (테스트 및 기본 CI/CD)**
+**Phase 1: 최우선 (테스트 시스템)**
 
 3. **Frontend 테스트 시스템 구축** ⚛️
 
@@ -285,20 +293,19 @@ npm install
    - API 연동 테스트 (Mock Service Worker)
    - 사용자 시나리오 테스트 (E2E)
 
-4. **GitHub Actions CI/CD 파이프라인** 🤖
-
-   - 자동 테스트 및 코드 품질 검증
-   - main 브랜치 push 시 자동 배포
-   - Docker 이미지 빌드 및 EC2 배포 자동화
-   - 롤백 시스템 및 배포 실패 알림
-
 **Phase 2: 단기 목표 (배포 시스템 고도화)**
+
+4. **자동 롤백 시스템** 🔄
+
+   - 배포 실패 시 이전 커밋 자동 복구
+   - 헬스체크 기반 배포 상태 검증
+   - 배포 실패 알림 및 로그 수집
 
 5. **무중단 배포 시스템** 🔄
 
    - Rolling Update 배포 방식 도입
-   - 헬스체크 기반 자동 롤백
    - Blue-Green 배포 고려
+   - 컨테이너 태그 버전 관리
 
 6. **배포 모니터링 & 알림** 📊
 
@@ -349,6 +356,15 @@ npm install
    - Git 기반 자동 배포 시스템 구축
    - 완전한 배포 문서 시스템 (docs/AWS_EC2_DEPLOYMENT.md)
 
+14. **GitHub Actions CI/CD 파이프라인** ✅ 
+   - 자동 테스트 실행 (pytest + 70% 커버리지 요구)
+   - 프론트엔드 빌드 검증 (React build test)
+   - main 브랜치 push 시 EC2 자동 배포
+   - 600초 타임아웃 및 스마트 대기 시스템
+   - `[skip ci]` 커밋 메시지 지원
+   - 데이터 보전 모드 배포 (프로덕션 데이터 유지)
+   - ⚠️ 롤백 시스템 미구현 (배포 실패 시 수동 복구 필요)
+
 ## Environment Variables
 
 Required `.env` file in backend directory:
@@ -388,9 +404,9 @@ DATABASE_PORT=3306
 **✍️ 언제 기록하나요?** 복잡한 구현 패턴, 데이터 플로우, API 설계 완료 시
 
 - `docs/SYSTEM_DATA_FLOW.md`: 백엔드/프론트엔드 전체 데이터 플로우 및 Mermaid 문법 가이드
+- `docs/TESTING_GUIDE.md`: **통합 테스팅 가이드** - Backend + Frontend + E2E 전체 전략 ⭐
 - `backend/docs/SERVICE_LAYER.md`: Service Layer 패턴과 비즈니스 로직 구조
 - `backend/docs/API_ROUTING.md`: Django DRF 라우팅 시스템 해설
-- `backend/docs/TESTING_GUIDE.md`: 테스트 아키텍처 및 실행 가이드
 
 ### 🛠️ Setup & Operations (설정 및 운영)
 
@@ -498,7 +514,51 @@ pytest backend/core/tests/unit/services/ -v
 pytest backend/core/tests/unit/serializers/ -v
 ```
 
+### E2E Testing
+
+```bash
+# E2E 테스트 디렉토리로 이동
+cd e2e_tests
+
+# 브라우저 창을 보면서 실행 (개발/디버깅)
+npm run test:crud
+
+# 백그라운드에서 빠른 실행 (CI/CD)
+npm run test:crud-headless
+
+# 의존성 설치 (최초 1회)
+npm run install-playwright
+```
+
+**🎭 현재 구현된 E2E 시나리오:**
+- 로그인/대시보드 접근 검증
+- 공급업체 CRUD 워크플로우 (생성 → 수정 → 삭제)
+- 원자재 CRUD 워크플로우 (등록 → 삭제)
+- 동적 테스트 데이터 생성으로 중복 방지
+- 실패 시 자동 스크린샷 저장
+
+**📚 상세 가이드**: `docs/TESTING_GUIDE.md` 참조
+
 ### Production Deployment
+
+#### GitHub Actions 자동 배포 (기본)
+
+```bash
+# main 브랜치에 push하면 자동 배포
+git push origin main
+
+# CI 건너뛰기 (문서 업데이트 등)
+git commit -m "docs: update documentation [skip ci]"
+git push origin main
+```
+
+**🔄 GitHub Actions 워크플로우:**
+- main 브랜치 push 시 자동 실행
+- Backend 테스트 (70% 커버리지 요구)
+- Frontend 빌드 검증
+- AWS EC2 자동 배포 (600초 타임아웃)
+
+#### 수동 배포 (긴급 상황)
 
 ```bash
 # AWS EC2 프로덕션 배포 (전체 자동화)
